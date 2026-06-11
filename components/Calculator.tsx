@@ -4,16 +4,17 @@ import { getTranslations, Locale } from '@/lib/i18n';
 
 const prices = {
   current: {
-    'gpt4o': { input: 18, output: 72, name: 'GPT-4o' },
-    'claude-sonnet': { input: 22, output: 108, name: 'Claude 4.6 Sonnet' },
-    'claude-opus': { input: 108, output: 540, name: 'Claude Opus 4.7' },
-    'gemini-pro': { input: 9, output: 36, name: 'Gemini 3.1 Pro' },
-    'qwen3-max': { input: 20, output: 60, name: 'Qwen3-Max' },
+    'gpt4o': { input: 18, output: 72, name: 'GPT-4o (官方价)' },
+    'claude-sonnet': { input: 22, output: 108, name: 'Claude Sonnet (官方价)' },
+    'claude-opus': { input: 108, output: 540, name: 'Claude Opus (官方价)' },
+    'qwen-max-official': { input: 12, output: 48, name: 'Qwen-Max (官方价)' },
   },
   target: {
-    'deepseek-flash': { input: 1.4, output: 5.6, name: 'DeepSeek V4 Flash' },
-    'deepseek-pro': { input: 7.0, output: 28.0, name: 'DeepSeek V4 Pro' },
-    'gpt55-mini': { input: 1.1, output: 4.3, name: 'GPT-5.5 Mini' },
+    'qwen-plus': { input: 0.8, output: 2.0, name: 'Qwen-Plus' },
+    'deepseek-chat': { input: 1.0, output: 4.0, name: 'DeepSeek V4 Chat' },
+    'deepseek-reasoner': { input: 4.0, output: 16.0, name: 'DeepSeek V4 Reasoner' },
+    'qwen-max': { input: 2.0, output: 8.0, name: 'Qwen-Max' },
+    'glm-4': { input: 5.0, output: 5.0, name: 'GLM-4' },
   },
 };
 

@@ -1,23 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// SiliconFlow provides OpenAI-compatible API for DeepSeek models
+const SILICONFLOW_URL = process.env.SILICONFLOW_BASE_URL || 'https://api.deepseek.com/v1';
+const SILICONFLOW_KEY = process.env.DEEPSEEK_API_KEY || '';
+
 // Upstream API endpoints
 const UPSTREAM = {
-  'deepseek-chat': { url: 'https://api.deepseek.com/v1', key: process.env.DEEPSEEK_API_KEY || '' },
-  'deepseek-reasoner': { url: 'https://api.deepseek.com/v1', key: process.env.DEEPSEEK_API_KEY || '' },
+  'deepseek-chat': { url: SILICONFLOW_URL, key: SILICONFLOW_KEY },
+  'deepseek-reasoner': { url: SILICONFLOW_URL, key: SILICONFLOW_KEY },
+  'qwen-plus': { url: SILICONFLOW_URL, key: SILICONFLOW_KEY },
+  'qwen-max': { url: SILICONFLOW_URL, key: SILICONFLOW_KEY },
+  'glm-4': { url: SILICONFLOW_URL, key: SILICONFLOW_KEY },
   'gpt-4o': { url: 'https://api.openai.com/v1', key: process.env.OPENAI_API_KEY || '' },
   'gpt-5.5-mini': { url: 'https://api.openai.com/v1', key: process.env.OPENAI_API_KEY || '' },
   'claude-sonnet': { url: 'https://api.anthropic.com/v1', key: process.env.ANTHROPIC_API_KEY || '' },
   'claude-opus': { url: 'https://api.anthropic.com/v1', key: process.env.ANTHROPIC_API_KEY || '' },
 };
 
-// Pricing per 1M tokens (in cents USD)
+// Pricing per 1M tokens (in cents USD) — SiliconFlow models priced for profit
 const PRICING: Record<string, { input: number; output: number }> = {
-  'deepseek-chat': { input: 20, output: 80 },        // ~$0.20/$0.80 per 1M
-  'deepseek-reasoner': { input: 100, output: 400 },   // ~$1/$4 per 1M
-  'gpt-4o': { input: 250, output: 1000 },              // $2.50/$10 per 1M
-  'gpt-5.5-mini': { input: 15, output: 60 },           // ~$0.15/$0.60 per 1M
-  'claude-sonnet': { input: 300, output: 1500 },       // $3/$15 per 1M
-  'claude-opus': { input: 1500, output: 7500 },        // $15/$75 per 1M
+  'deepseek-chat': { input: 30, output: 120 },         // cost ~¥0.8/M → sell $0.30/$1.20
+  'deepseek-reasoner': { input: 150, output: 600 },    // cost ~¥4/M → sell $1.50/$6
+  'qwen-plus': { input: 30, output: 120 },             // cost ~¥0.8/M → sell $0.30/$1.20
+  'qwen-max': { input: 50, output: 200 },              // cost ~¥2/M → sell $0.50/$2
+  'glm-4': { input: 50, output: 200 },                 // cost ~¥5/M → sell $0.50/$2
+  'gpt-4o': { input: 250, output: 1000 },
+  'gpt-5.5-mini': { input: 15, output: 60 },
+  'claude-sonnet': { input: 300, output: 1500 },
+  'claude-opus': { input: 1500, output: 7500 },
 };
 
 function getAuthToken(req: NextRequest): string | null {
