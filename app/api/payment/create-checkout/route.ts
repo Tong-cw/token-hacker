@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import Stripe from 'stripe';
 
-// ⚠️ Set STRIPE_SECRET_KEY in Vercel environment variables
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.aiapisave.xyz';
 
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Real Stripe checkout
-    const stripe = require('stripe')(STRIPE_SECRET_KEY);
+    const stripe = new Stripe(STRIPE_SECRET_KEY);
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card', 'alipay'],
       line_items: [{
