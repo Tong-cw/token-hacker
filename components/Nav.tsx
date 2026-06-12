@@ -19,6 +19,7 @@ export default function Nav({ locale }: { locale: Locale }) {
           <ul className="nav-links">
             <li><Link href={`/${locale}/models`}>{t.models}</Link></li>
             <li><Link href={`/${locale}/pricing`}>{t.pricing}</Link></li>
+            <li><Link href={`/${locale}/team`}>{t.team}</Link></li>
             <li><Link href={`/${locale}/docs`}>{t.docs}</Link></li>
             <li><Link href={`/${locale}/blog`}>{t.blog}</Link></li>
           </ul>
