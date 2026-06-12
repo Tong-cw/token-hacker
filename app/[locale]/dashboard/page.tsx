@@ -1,5 +1,6 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { getTranslations, Locale } from '@/lib/i18n';
 
@@ -7,35 +8,22 @@ export default function DashboardPage({ params }: { params: { locale: string } }
   const locale = params.locale as Locale;
   const t = getTranslations(locale).dashboard;
   const st = getTranslations(locale).settings;
-  const [user, setUser] = useState<any>(null);
+  const { data: session, status } = useSession();
   const [copied, setCopied] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function load() {
-      try {
-        const res = await fetch('/api/auth');
-        if (res.ok) {
-          const data = await res.json();
-          setUser(data.user);
-        }
-      } catch {}
-      setLoading(false);
-    }
-    load();
-  }, []);
 
   function copyKey() {
-    if (user?.apiKey) {
-      navigator.clipboard.writeText(user.apiKey);
+    const apiKey = (session?.user as any)?.apiKey;
+    if (apiKey) {
+      navigator.clipboard.writeText(apiKey);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
   }
 
-  if (loading) return <div className="dashboard"><p style={{ color: 'var(--text-dim)' }}>Loading...</p></div>;
-  if (!user) return <div className="dashboard"><p style={{ color: 'var(--text-dim)' }}>Please sign in first.</p><a href={`/${locale}/login`} style={{ color: 'var(--accent)' }}>Sign In →</a></div>;
+  if (status === 'loading') return <div className="dashboard"><p style={{ color: 'var(--text-dim)' }}>Loading...</p></div>;
+  if (!session) return <div className="dashboard"><p style={{ color: 'var(--text-dim)' }}>Please sign in first.</p><a href={`/${locale}/login`} style={{ color: 'var(--accent)' }}>Sign In →</a></div>;
 
+  const user = session.user as any;
   const members = [
     { name: 'alice@example.com', role: 'Owner', since: 'Jun 2026', quota: '1.2M', rpm: '60', tpm: '90000' },
     { name: 'bob@devteam.io', role: 'Admin', since: 'Jun 2026', quota: '840K', rpm: '60', tpm: '90000' },

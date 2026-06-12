@@ -572,6 +572,36 @@ footer p + p { margin-top: 4px; }
 }
 .auth-card h2 { font-size: 1.5rem; margin-bottom: 0.5rem; }
 .auth-card .subtitle { color: var(--text-dim); margin-bottom: 1.5rem; }
+
+/* OAuth buttons */
+.oauth-buttons {
+  display: flex; flex-direction: column; gap: 0.6rem;
+  margin-bottom: 1.2rem;
+}
+
+.oauth-btn {
+  display: flex; align-items: center; gap: 0.75rem;
+  width: 100%; padding: 11px 16px;
+  background: var(--bg); color: var(--text-primary);
+  border: 1px solid var(--border); border-radius: 10px;
+  font-size: 0.9rem; font-weight: 500; cursor: pointer;
+  transition: all 0.2s; font-family: inherit;
+  text-align: left;
+}
+.oauth-btn:hover { border-color: var(--accent); background: var(--bg-card-hover); }
+.oauth-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.oauth-icon { display: flex; align-items: center; flex-shrink: 0; }
+.oauth-text { flex: 1; }
+
+.divider {
+  display: flex; align-items: center; gap: 1rem;
+  margin: 1.2rem 0; color: var(--text-dim); font-size: 0.82rem;
+}
+.divider::before, .divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+
 .form-group { margin-bottom: 1rem; }
 .form-group label { display: block; font-size: 0.9rem; color: var(--text-dim); margin-bottom: 6px; }
 .form-group input {
