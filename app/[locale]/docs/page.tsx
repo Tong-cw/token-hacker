@@ -159,7 +159,7 @@ def call_with_retry(client, **kwargs):
             </div>
             <div className="faq-item">
               <h4>What payment methods are accepted?</h4>
-              <p>Currently we accept USDT-TRC20. More crypto payment options coming soon.</p>
+              <p>We accept credit/debit cards (Visa, Mastercard) via Stripe, and USDT-TRC20 for crypto payments. More options coming soon.</p>
             </div>
             <div className="faq-item">
               <h4>Do you log my prompts?</h4>
