@@ -5,22 +5,21 @@ import { getTranslations, Locale } from '@/lib/i18n';
 
 export async function generateMetadata({ params }: { params: { locale: string } }) {
   const locale = params.locale as Locale;
-  const t = getTranslations(locale);
   const title = locale === 'zh'
-    ? 'Token Hacker — AI API 价格对比 | 每年省 80%'
-    : 'Token Hacker — AI API Price Comparison | Save 80%';
+    ? 'Token Hacker — 一个 API Key 调用所有 AI 模型 | 预付费 · USDT 支付'
+    : 'Token Hacker — One API Key for All AI Models | Prepaid · Pay with USDT';
 
   return {
     title,
     description: locale === 'zh'
-      ? 'AI API 价格对比，帮你每年省 80% Token 开销。DeepSeek、GPT、Claude、Gemini 实时比价，免费省钱计算器。'
-      : 'Compare AI API prices. Save 80% on token costs. DeepSeek, GPT, Claude, Gemini real-time comparison. Free savings calculator.',
-    keywords: 'AI API, DeepSeek, GPT, Claude, price comparison, API proxy, token calculator, save money',
+      ? '接入 200+ AI 模型 — GPT、Claude、Gemini、DeepSeek。OpenAI 兼容 API，USDT-TRC20 支付，预付费无订阅。60 秒上手。'
+      : 'Access 200+ AI models through a single OpenAI-compatible API. Pay with USDT. Prepaid, no subscription. Start in 60 seconds.',
+    keywords: 'AI API, GPT, Claude, Gemini, DeepSeek, USDT payment, crypto AI, OpenAI compatible, model aggregator, API proxy',
     openGraph: {
       title,
       description: locale === 'zh'
-        ? '帮你每年省 80% Token 开销，免费省钱计算器。'
-        : 'Save 80% on AI API costs. Free savings calculator.',
+        ? '一个 API Key 调用所有 AI 模型。预付费 · USDT 支付 · OpenAI 兼容。'
+        : 'One API Key for all AI models. Prepaid. Pay with USDT. OpenAI compatible.',
       type: 'website',
     },
   };

@@ -14,11 +14,12 @@ export default function Nav({ locale }: { locale: Locale }) {
       <div className="nav-inner">
         <div className="nav-left">
           <Link href={`/${locale}`} className="logo">
-            <span className="icon">⚡</span>Token Hacker
+            <span className="logo-icon">⚡</span>Token Hacker
           </Link>
           <ul className="nav-links">
-            <li><Link href={`/${locale}#pricing`}>{t.pricing}</Link></li>
-            <li><Link href={`/${locale}#calculator`}>{t.calculator}</Link></li>
+            <li><Link href={`/${locale}/models`}>{t.models}</Link></li>
+            <li><Link href={`/${locale}/pricing`}>{t.pricing}</Link></li>
+            <li><Link href={`/${locale}/docs`}>{t.docs}</Link></li>
             <li><Link href={`/${locale}/blog`}>{t.blog}</Link></li>
           </ul>
         </div>
