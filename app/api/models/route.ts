@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getModelRank } from '@/lib/model-rank';
 
 const BACKEND_URL = process.env.NEW_API_URL || 'https://api.aiapisave.xyz';
 const BACKEND_TOKEN = process.env.NEW_API_TOKEN || 'hTaKeyojP8ptefzfc6KbDPuopy5BSE7zIbiAm62rboS8CVQw';
@@ -53,7 +54,15 @@ export async function GET() {
       (m: ModelEntry): boolean => (!!m.pricing && m.pricing.input !== '—' && m.pricing.output !== '—')
     );
 
-    return NextResponse.json({ models: pricedModels });
+    // Sort by usage frequency rank (descending), then alphabetically
+    const sortedModels = pricedModels.sort((a: ModelEntry, b: ModelEntry) => {
+      const rankA = getModelRank(a.id);
+      const rankB = getModelRank(b.id);
+      if (rankB !== rankA) return rankB - rankA;
+      return a.id.localeCompare(b.id);
+    });
+
+    return NextResponse.json({ models: sortedModels });
   } catch (e) {
     return NextResponse.json({ error: 'Failed to fetch models' }, { status: 500 });
   }
