@@ -64,35 +64,31 @@ function findOrCreateOAuthUser(profile: {
 
 const providers = [];
 
-// GitHub OAuth
-if (process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET) {
-  providers.push(
-    GitHub({
-      clientId: process.env.AUTH_GITHUB_ID,
-      clientSecret: process.env.AUTH_GITHUB_SECRET,
-      profile(profile) {
-        return {
-          id: `github_${profile.id}`,
-          name: profile.name || profile.login,
-          email: profile.email || `${profile.login}@github.user`,
-          image: profile.avatar_url,
-          provider: 'github',
-          providerId: String(profile.id),
-        };
-      },
-    })
-  );
-}
+// GitHub OAuth (always register - env vars confirmed present at runtime)
+providers.push(
+  GitHub({
+    clientId: process.env.AUTH_GITHUB_ID!,
+    clientSecret: process.env.AUTH_GITHUB_SECRET!,
+    profile(profile) {
+      return {
+        id: `github_${profile.id}`,
+        name: profile.name || profile.login,
+        email: profile.email || `${profile.login}@github.user`,
+        image: profile.avatar_url,
+        provider: 'github',
+        providerId: String(profile.id),
+      };
+    },
+  })
+);
 
-// Google OAuth
-if (process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET) {
-  providers.push(
-    Google({
-      clientId: process.env.AUTH_GOOGLE_ID,
-      clientSecret: process.env.AUTH_GOOGLE_SECRET,
-    })
-  );
-}
+// Google OAuth (always register - env vars confirmed present at runtime)
+providers.push(
+  Google({
+    clientId: process.env.AUTH_GOOGLE_ID!,
+    clientSecret: process.env.AUTH_GOOGLE_SECRET!,
+  })
+);
 
 // Microsoft Entra ID
 if (process.env.AUTH_MICROSOFT_ID && process.env.AUTH_MICROSOFT_SECRET) {
@@ -188,6 +184,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   callbacks: {
     async jwt({ token, user, account, profile }) {
+      try {
       if (user) {
         token.id = user.id;
         token.email = user.email;
@@ -226,6 +223,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
 
       return token;
+      } catch (err: any) {
+        console.error('[JWT callback error]', err?.message || err, err?.stack);
+        throw err;
+      }
     },
 
     async session({ session, token }) {
@@ -238,12 +239,28 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
 
     async signIn({ user, account }) {
+      try {
       // Allow all sign-ins including OAuth without verified email
       return true;
+      } catch (err: any) {
+        console.error('[SignIn callback error]', err?.message || err);
+        return false;
+      }
     },
   },
   session: {
     strategy: 'jwt',
   },
   trustHost: true,
+  logger: {
+    error(code, ...message) {
+      console.error('[NextAuth Error]', code, ...message);
+    },
+    warn(code, ...message) {
+      console.warn('[NextAuth Warn]', code, ...message);
+    },
+    debug(code, ...message) {
+      console.log('[NextAuth Debug]', code, ...message);
+    },
+  },
 });

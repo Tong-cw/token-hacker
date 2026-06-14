@@ -1,146 +1,356 @@
 'use client';
-import { useState } from 'react';
-import Link from 'next/link';
+import { useState, useEffect } from 'react';
 import { getTranslations, Locale } from '@/lib/i18n';
 
-interface Model {
-  name: string;
-  provider: string;
-  capability: string;
-  contextWindow: number;
-  inputPrice: string;
-  outputPrice: string;
-  tag: string;
+interface Pricing {
+  input: string;
+  output: string;
 }
 
-const allModels: Model[] = [
-  { name: 'GPT-4o', provider: 'OpenAI', capability: 'chat', contextWindow: 128000, inputPrice: '$2.50', outputPrice: '$10.00', tag: '' },
-  { name: 'GPT-4o-mini', provider: 'OpenAI', capability: 'chat', contextWindow: 128000, inputPrice: '$0.15', outputPrice: '$0.60', tag: 'best' },
-  { name: 'GPT-5.4', provider: 'OpenAI', capability: 'chat', contextWindow: 1050000, inputPrice: '$5.00', outputPrice: '$30.00', tag: '' },
-  { name: 'Claude 4.6 Sonnet', provider: 'Anthropic', capability: 'chat', contextWindow: 200000, inputPrice: '$3.00', outputPrice: '$15.00', tag: 'rec' },
-  { name: 'Claude 4.6 Haiku', provider: 'Anthropic', capability: 'chat', contextWindow: 200000, inputPrice: '$0.80', outputPrice: '$4.00', tag: 'best' },
-  { name: 'Claude Opus 4.7', provider: 'Anthropic', capability: 'reasoning', contextWindow: 200000, inputPrice: '$15.00', outputPrice: '$75.00', tag: '' },
-  { name: 'Gemini 3.1 Pro', provider: 'Google', capability: 'chat', contextWindow: 1048576, inputPrice: '$1.25', outputPrice: '$5.00', tag: '' },
-  { name: 'Gemini 3.1 Flash', provider: 'Google', capability: 'chat', contextWindow: 1048576, inputPrice: '$0.15', outputPrice: '$0.60', tag: 'best' },
-  { name: 'Gemini 3.1 Ultra', provider: 'Google', capability: 'reasoning', contextWindow: 1048576, inputPrice: '$5.00', outputPrice: '$20.00', tag: '' },
-  { name: 'DeepSeek V4 Pro', provider: 'DeepSeek', capability: 'reasoning', contextWindow: 128000, inputPrice: '$0.98', outputPrice: '$3.92', tag: '' },
-  { name: 'DeepSeek V4 Flash', provider: 'DeepSeek', capability: 'chat', contextWindow: 128000, inputPrice: '$0.14', outputPrice: '$0.56', tag: 'best' },
-  { name: 'DeepSeek R1-0528', provider: 'DeepSeek', capability: 'reasoning', contextWindow: 64000, inputPrice: '$0.55', outputPrice: '$2.19', tag: '' },
-  { name: 'Llama 4 Maverick', provider: 'Meta', capability: 'chat', contextWindow: 1048576, inputPrice: '$0.20', outputPrice: '$0.60', tag: 'best' },
-  { name: 'Grok-4', provider: 'X.AI', capability: 'chat', contextWindow: 1000000, inputPrice: '$2.00', outputPrice: '$8.00', tag: '' },
-  { name: 'Grok-4 Mini', provider: 'X.AI', capability: 'chat', contextWindow: 1000000, inputPrice: '$0.20', outputPrice: '$0.80', tag: 'best' },
-  { name: 'Qwen 3 Max', provider: 'Qwen', capability: 'reasoning', contextWindow: 128000, inputPrice: '$0.56', outputPrice: '$1.68', tag: '' },
-  { name: 'Mistral Large 3', provider: 'Mistral', capability: 'chat', contextWindow: 256000, inputPrice: '$2.00', outputPrice: '$6.00', tag: '' },
-  { name: 'Mistral Small 3', provider: 'Mistral', capability: 'chat', contextWindow: 128000, inputPrice: '$0.10', outputPrice: '$0.30', tag: 'best' },
-  { name: 'Claude 4.6 Opus', provider: 'Anthropic', capability: 'reasoning', contextWindow: 200000, inputPrice: '$15.00', outputPrice: '$75.00', tag: '' },
-  { name: 'GPT-4.1-mini', provider: 'OpenAI', capability: 'chat', contextWindow: 1048576, inputPrice: '$0.30', outputPrice: '$1.20', tag: '' },
-];
+interface ModelItem {
+  id: string;
+  owned_by: string;
+  pricing: Pricing | null;
+}
 
-const providers = ['All', 'OpenAI', 'Anthropic', 'Google', 'DeepSeek', 'Meta', 'X.AI', 'Qwen', 'Mistral'];
-const capabilities = ['all', 'chat', 'reasoning', 'vision', 'embedding'];
+function getProvider(id: string, owned_by: string): string {
+  const lower = id.toLowerCase();
+  if (lower.startsWith('gpt') || lower.startsWith('o1') || lower.startsWith('o3') || lower.startsWith('o4')) return 'OpenAI';
+  if (lower.startsWith('claude')) return 'Anthropic';
+  if (lower.startsWith('gemini')) return 'Google';
+  if (lower.startsWith('deepseek')) return 'DeepSeek';
+  if (lower.startsWith('llama')) return 'Meta';
+  if (lower.startsWith('grok')) return 'X.AI';
+  if (lower.startsWith('qwen') || lower.startsWith('qwq')) return 'Qwen';
+  if (lower.startsWith('mistral') || lower.startsWith('codestral') || lower.startsWith('mixtral')) return 'Mistral';
+  if (lower.startsWith('glm') || lower.startsWith('chatglm')) return 'Zhipu';
+  if (lower.startsWith('doubao')) return 'ByteDance';
+  if (lower.startsWith('kimi') || lower.startsWith('moonshot')) return 'Moonshot';
+  if (lower.startsWith('yi-') || lower.startsWith('yi ')) return '01.AI';
+  if (lower.startsWith('minimax') || lower.startsWith('abab')) return 'MiniMax';
+  if (lower.startsWith('hunyuan')) return 'Tencent';
+  if (lower.startsWith('ernie') || lower.startsWith('bce-')) return 'Baidu';
+  if (lower.startsWith('spark')) return 'iFlytek';
+  if (owned_by === 'siliconflow') return 'SiliconFlow';
+  if (lower.includes('embed')) return 'Embedding';
+  if (lower.includes('tts') || lower.includes('speech') || lower.includes('asr')) return 'Audio';
+  if (lower.includes('image') || lower.includes('vidu') || lower.includes('veo') || lower.includes('wan') || lower.includes('suno')) return 'Media';
+  if (lower.includes('whisper')) return 'Audio';
+  if (lower.includes('rerank') || lower.includes('bge-')) return 'Embedding';
+  return owned_by === 'openai' ? 'Other' : owned_by;
+}
+
+function getCapability(id: string): string {
+  const lower = id.toLowerCase();
+  if (lower.includes('tts') || lower.includes('speech') || lower.includes('asr') || lower.includes('whisper')) return 'audio';
+  if (lower.includes('embed') || lower.includes('rerank') || lower.includes('bge-')) return 'embedding';
+  if (lower.includes('image') || lower.includes('vidu') || lower.includes('veo') || lower.includes('wan') || lower.includes('suno')) return 'media';
+  if (lower.includes('vl') || lower.includes('vision') || lower.includes('omni') || lower.includes('ocr')) return 'vision';
+  if (lower.includes('think') || lower.includes('reason') || lower.includes('qwq') || lower.startsWith('o1') || lower.startsWith('o3') || lower.startsWith('o4')) return 'reasoning';
+  if (lower.includes('coder') || lower.includes('code')) return 'code';
+  return 'chat';
+}
+
+const PAGE_SIZE = 30;
+
+function copyCode(model: string) {
+  const code = `from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://api.aiapisave.xyz/v1",
+    api_key="sk-your-key",
+)
+
+response = client.chat.completions.create(
+    model="${model}",
+    messages=[{"role": "user", "content": "Hello!"}],
+)`;
+  navigator.clipboard.writeText(code);
+}
 
 export default function ModelsPage({ params }: { params: { locale: string } }) {
   const locale = params.locale as Locale;
   const t = getTranslations(locale);
+  const [allModels, setAllModels] = useState<ModelItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [provider, setProvider] = useState('All');
   const [capability, setCapability] = useState('all');
   const [copied, setCopied] = useState('');
+  const [page, setPage] = useState(1);
+  const [selected, setSelected] = useState<ModelItem | null>(null);
+
+  useEffect(() => {
+    fetch('/api/models')
+      .then(r => r.json())
+      .then(data => {
+        // Show all models; only display price for properly-configured ones
+        setAllModels(data.models || []);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const providers = ['All', ...Array.from(new Set(allModels.map(m => getProvider(m.id, m.owned_by)))).sort()];
+  const capabilities = ['all', 'chat', 'reasoning', 'code', 'vision', 'audio', 'embedding', 'media'];
 
   const filtered = allModels.filter((m) => {
-    if (search && !m.name.toLowerCase().includes(search.toLowerCase()) && !m.provider.toLowerCase().includes(search.toLowerCase())) return false;
-    if (provider !== 'All' && m.provider !== provider) return false;
-    if (capability !== 'all' && m.capability !== capability) return false;
+    const p = getProvider(m.id, m.owned_by);
+    const c = getCapability(m.id);
+    if (search && !m.id.toLowerCase().includes(search.toLowerCase()) && !p.toLowerCase().includes(search.toLowerCase())) return false;
+    if (provider !== 'All' && p !== provider) return false;
+    if (capability !== 'all' && c !== capability) return false;
     return true;
   });
 
-  const copyCode = (model: string) => {
-    const code = `from openai import OpenAI\n\nclient = OpenAI(\n    base_url="https://api.aiapisave.xyz/v1",\n    api_key="sk-your-key",\n)\n\nresponse = client.chat.completions.create(\n    model="${model}",\n    messages=[{"role": "user", "content": "Hello!"}],\n)`;
-    navigator.clipboard.writeText(code);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const start = (safePage - 1) * PAGE_SIZE;
+  const displayed = filtered.slice(start, start + PAGE_SIZE);
+
+  // Reset page when filters change
+  const setFilter = (key: string, val: string) => {
+    if (key === 'search') setSearch(val);
+    if (key === 'provider') setProvider(val);
+    if (key === 'capability') setCapability(val);
+    setPage(1);
+  };
+
+  const handleCopy = (model: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    copyCode(model);
     setCopied(model);
     setTimeout(() => setCopied(''), 2000);
   };
 
-  const formatContext = (n: number) => {
-    if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
-    if (n >= 1000) return `${(n / 1000).toFixed(0)}K`;
-    return String(n);
+  const handleCopyModal = async (model: string) => {
+    copyCode(model);
+    setCopied(model);
+    setTimeout(() => setCopied(''), 2000);
   };
+
+  const pageNumbers: number[] = [];
+  for (let i = Math.max(1, safePage - 2); i <= Math.min(totalPages, safePage + 2); i++) {
+    pageNumbers.push(i);
+  }
 
   return (
     <div className="models-page">
       <div className="container">
         <div className="page-header">
           <h1>{t.models.title}</h1>
-          <p>{t.models.subtitle}</p>
+          <p>{loading ? t.models.loading : `${allModels.length} ${t.models.available}`}</p>
         </div>
 
-        {/* Filters */}
         <div className="models-filters">
           <input
             className="models-search"
             type="text"
             placeholder={t.models.search}
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => setFilter('search', e.target.value)}
           />
-          <select className="models-select" value={provider} onChange={(e) => setProvider(e.target.value)}>
-            <option value="All">{t.models.allProviders}</option>
-            {providers.filter(p => p !== 'All').map(p => (
-              <option key={p} value={p}>{p}</option>
-            ))}
+          <select className="models-select" value={provider} onChange={(e) => setFilter('provider', e.target.value)}>
+            {providers.map(p => <option key={p} value={p}>{p}</option>)}
           </select>
-          <select className="models-select" value={capability} onChange={(e) => setCapability(e.target.value)}>
+          <select className="models-select" value={capability} onChange={(e) => setFilter('capability', e.target.value)}>
             <option value="all">{t.models.allCapabilities}</option>
             {capabilities.filter(c => c !== 'all').map(c => (
-              <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>
+              <option key={c} value={c}>{(t.models as any)[c] || c}</option>
             ))}
           </select>
         </div>
 
-        {/* Model Cards */}
-        <div className="models-result-grid">
-          {filtered.map((m) => (
-            <div className="model-detail-card" key={m.name}>
-              <div className="model-detail-header">
-                <div>
-                  <span className="model-provider-tag">{m.provider}</span>
-                  <h3>{m.name}</h3>
-                </div>
-                <div className="model-detail-tags">
-                  <span className="capability-tag">{m.capability}</span>
-                  {m.tag === 'best' && <span className="tag tag-best">{t.models.copied.replace('Copied!', 'Best Value')}</span>}
-                  {m.tag === 'rec' && <span className="tag tag-rec">{t.featuredModels.recommended || 'Popular'}</span>}
-                </div>
-              </div>
-              <div className="model-detail-stats">
-                <div className="stat">
-                  <span className="stat-label">{t.models.context}</span>
-                  <span className="stat-value">{formatContext(m.contextWindow)} {t.models.tokens}</span>
-                </div>
-                <div className="stat">
-                  <span className="stat-label">{t.models.inputPrice}</span>
-                  <span className="stat-value price">{m.inputPrice}</span>
-                </div>
-                <div className="stat">
-                  <span className="stat-label">{t.models.outputPrice}</span>
-                  <span className="stat-value price">{m.outputPrice}</span>
-                </div>
-              </div>
-              <button
-                className="copy-code-btn"
-                onClick={() => copyCode(m.name)}
-              >
-                {copied === m.name ? '✅ ' + (copied === m.name ? t.models.copied : '') : t.models.copyCode}
-              </button>
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-dim)' }}>⏳ {t.models.loading}</div>
+        ) : (
+          <>
+            <div className="models-result-grid">
+              {displayed.map((m) => {
+                const p = getProvider(m.id, m.owned_by);
+                const c = getCapability(m.id);
+                return (
+                  <div className="model-detail-card model-clickable" key={m.id} onClick={() => setSelected(m)}>
+                    <div className="model-detail-header">
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <span className="model-provider-tag">{p}</span>
+                        <h3 style={{ fontSize: '0.92rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={m.id}>{m.id}</h3>
+                      </div>
+                      <div className="model-detail-tags">
+                        <span className="capability-tag">{c}</span>
+                        {m.pricing && m.pricing.input !== '—' && <span className="tag tag-best" style={{ fontSize: '0.65rem' }}>{t.models.priced}</span>}
+                      </div>
+                    </div>
+                    <div className="model-detail-stats" style={{ marginBottom: '0.6rem' }}>
+                      <div className="stat">
+                        <span className="stat-label">{t.models.detail.input} /1M</span>
+                        <span className="stat-value price">{m.pricing?.input}</span>
+                      </div>
+                      <div className="stat">
+                        <span className="stat-label">{t.models.detail.output} /1M</span>
+                        <span className="stat-value price">{m.pricing?.output}</span>
+                      </div>
+                    </div>
+                    <button className="copy-code-btn" onClick={(e) => handleCopy(m.id, e)}>
+                      {copied === m.id ? `✅ ${t.models.copied}` : t.models.copyCode}
+                    </button>
+                  </div>
+                );
+              })}
             </div>
-          ))}
-        </div>
-        {filtered.length === 0 && (
-          <p style={{ textAlign: 'center', color: 'var(--text-dim)', padding: '3rem' }}>
-            No models found. Try different filters.
-          </p>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="pagination">
+                <button className="page-btn" disabled={safePage <= 1} onClick={() => setPage(p => p - 1)}>←</button>
+                {safePage > 3 && (
+                  <>
+                    <button className="page-btn" onClick={() => setPage(1)}>1</button>
+                    <span className="page-ellipsis">…</span>
+                  </>
+                )}
+                {pageNumbers.map(n => (
+                  <button key={n} className={`page-btn ${n === safePage ? 'active' : ''}`} onClick={() => setPage(n)}>{n}</button>
+                ))}
+                {safePage < totalPages - 2 && (
+                  <>
+                    <span className="page-ellipsis">…</span>
+                    <button className="page-btn" onClick={() => setPage(totalPages)}>{totalPages}</button>
+                  </>
+                )}
+                <button className="page-btn" disabled={safePage >= totalPages} onClick={() => setPage(p => p + 1)}>→</button>
+                <span className="page-info">{safePage} / {totalPages}</span>
+              </div>
+            )}
+
+            {filtered.length === 0 && !loading && (
+              <p style={{ textAlign: 'center', color: 'var(--text-dim)', padding: '3rem' }}>{t.models.noResults}</p>
+            )}
+          </>
         )}
+
+        {selected && <ModelDetail model={selected} t={t.models} onClose={() => setSelected(null)} onCopy={() => handleCopyModal(selected.id)} copied={copied} locale={locale} />}
+      </div>
+    </div>
+  );
+}
+
+function ModelDetail({ model, t, onClose, onCopy, copied, locale }: {
+  model: ModelItem; t: any; onClose: () => void; onCopy: () => void; copied: string; locale: string;
+}) {
+  const p = getProvider(model.id, model.owned_by);
+  const c = getCapability(model.id);
+  const apiBase = 'https://api.aiapisave.xyz';
+
+  const curlExample = `curl ${apiBase}/v1/chat/completions \\
+  -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer sk-your-key" \\
+  -d '{
+    "model": "${model.id}",
+    "messages": [{"role": "user", "content": "Hello!"}]
+  }'`;
+
+  const pythonExample = `from openai import OpenAI
+
+client = OpenAI(
+    base_url="${apiBase}/v1",
+    api_key="sk-your-key",
+)
+
+response = client.chat.completions.create(
+    model="${model.id}",
+    messages=[{"role": "user", "content": "Hello!"}],
+)
+print(response.choices[0].message.content)`;
+
+  const nodeExample = `import OpenAI from 'openai';
+
+const client = new OpenAI({
+  baseURL: '${apiBase}/v1',
+  apiKey: 'sk-your-key',
+});
+
+const response = await client.chat.completions.create({
+  model: '${model.id}',
+  messages: [{ role: 'user', content: 'Hello!' }],
+});
+console.log(response.choices[0].message.content);`;
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={e => e.stopPropagation()}>
+        <div className="modal-header">
+          <div>
+            <span className="model-provider-tag">{p}</span>
+            <h2>{model.id}</h2>
+          </div>
+          <button className="modal-close" onClick={onClose}>✕</button>
+        </div>
+
+        <div className="modal-body">
+          <div className="detail-section">
+            <h3>📋 {t.detail.overview}</h3>
+            <div className="detail-grid">
+              <div className="detail-item">
+                <span className="detail-label">{t.detail.provider}</span>
+                <span className="detail-value">{p}</span>
+              </div>
+              <div className="detail-item">
+                <span className="detail-label">{t.detail.capability}</span>
+                <span className="detail-value" style={{ textTransform: 'capitalize' }}>{c}</span>
+              </div>
+              <div className="detail-item">
+                <span className="detail-label">{t.detail.apiEndpoint}</span>
+                <span className="detail-value mono">{apiBase}/v1</span>
+              </div>
+              <div className="detail-item">
+                <span className="detail-label">{t.detail.modelId}</span>
+                <span className="detail-value mono">{model.id}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="detail-section">
+            <h3>💰 {t.detail.pricing}</h3>
+            <div className="detail-pricing-cards">
+              <div className="price-card">
+                <span className="price-card-label">{t.detail.input}</span>
+                <span className="price-card-value">{model.pricing?.input || '—'}</span>
+                <span className="price-card-unit">{t.detail.perMTokens}</span>
+              </div>
+              <div className="price-card">
+                <span className="price-card-label">{t.detail.output}</span>
+                <span className="price-card-value">{model.pricing?.output || '—'}</span>
+                <span className="price-card-unit">{t.detail.perMTokens}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="detail-section">
+            <h3>💻 {t.detail.apiUsage}</h3>
+            <div className="code-tabs">
+              <details className="code-block-detail" open={locale === 'zh'}>
+                <summary>Python</summary>
+                <pre className="modal-code"><code>{pythonExample}</code></pre>
+              </details>
+              <details className="code-block-detail">
+                <summary>cURL</summary>
+                <pre className="modal-code"><code>{curlExample}</code></pre>
+              </details>
+              <details className="code-block-detail" open={locale === 'en'}>
+                <summary>Node.js</summary>
+                <pre className="modal-code"><code>{nodeExample}</code></pre>
+              </details>
+            </div>
+          </div>
+        </div>
+
+        <div className="modal-footer">
+          <button className="btn-primary" onClick={onCopy}>
+            {copied === model.id ? `✅ ${t.copied}` : `📋 ${t.copyCode}`}
+          </button>
+          <button className="btn-outline" onClick={onClose}>{t.detail.close}</button>
+        </div>
       </div>
     </div>
   );

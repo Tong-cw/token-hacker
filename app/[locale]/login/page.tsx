@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { getTranslations, Locale } from '@/lib/i18n';
 
-const providers = [
+const oauthProviders = [
   {
     id: 'github',
     name: 'GitHub',
@@ -26,50 +26,11 @@ const providers = [
       </svg>
     ),
   },
-  {
-    id: 'microsoft-entra-id',
-    name: 'Microsoft',
-    icon: (
-      <svg viewBox="0 0 21 21" width="20" height="20">
-        <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
-        <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
-        <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
-        <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
-      </svg>
-    ),
-  },
-  {
-    id: 'twitter',
-    name: 'X (Twitter)',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
-        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-      </svg>
-    ),
-  },
-  {
-    id: 'discord',
-    name: 'Discord',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-        <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
-      </svg>
-    ),
-  },
-  {
-    id: 'gitlab',
-    name: 'GitLab',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-        <path d="M12 23.998l4.828-14.857H7.172L12 23.998zM2.106 9.141l-1.957 6.02a.534.534 0 0 0 .194.603l11.657 8.47L2.106 9.141zM21.894 9.141L12 24.234l11.657-8.47a.534.534 0 0 0 .194-.603l-1.957-6.02zM4.115 3.48l-2.01 5.661h19.79l-2.01-5.66a.535.535 0 0 0-.508-.354h-14.76a.535.535 0 0 0-.502.353z"/>
-      </svg>
-    ),
-  },
 ];
 
 export default function LoginPage({ params }: { params: { locale: string } }) {
   const locale = params.locale as Locale;
-  const t = getTranslations(locale).login;
+  const t = getTranslations(locale);
   const router = useRouter();
   const searchParams = useSearchParams();
   const isSignUp = searchParams.get('mode') === 'signup';
@@ -80,6 +41,9 @@ export default function LoginPage({ params }: { params: { locale: string } }) {
   const [loading, setLoading] = useState(false);
   const [loadingProvider, setLoadingProvider] = useState('');
   const [error, setError] = useState('');
+
+  // Check for OAuth errors in URL
+  const oauthError = searchParams.get('error');
 
   async function handleEmailSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -94,7 +58,9 @@ export default function LoginPage({ params }: { params: { locale: string } }) {
     });
 
     if (result?.error) {
-      setError(isSignUp ? 'Registration failed. Email may already be in use.' : 'Invalid email or password.');
+      setError(isSignUp
+        ? (locale === 'zh' ? '注册失败，邮箱可能已被使用' : 'Registration failed. Email may already be in use.')
+        : (locale === 'zh' ? '邮箱或密码错误' : 'Invalid email or password.'));
     } else if (result?.ok) {
       router.push(callbackUrl);
       router.refresh();
@@ -109,52 +75,78 @@ export default function LoginPage({ params }: { params: { locale: string } }) {
 
   return (
     <div className="auth-page">
-      <div className="auth-card" style={{ maxWidth: '440px' }}>
-        <h2>{isSignUp ? t.signUp : t.signIn}</h2>
-        <p className="subtitle">{t.subtitle}</p>
+      <div className="auth-card">
+        <div className="auth-header">
+          <h2>{isSignUp ? t.login.signUp : t.login.signIn}</h2>
+          <p className="auth-subtitle">
+            {isSignUp
+              ? (locale === 'zh' ? '创建账户，立即获得 $2 免费额度' : 'Create your account and get $2 free credits')
+              : (locale === 'zh' ? '登录您的 Token Hacker 账户' : 'Sign in to your Token Hacker account')
+            }
+          </p>
+        </div>
 
-        {/* OAuth buttons */}
+        {/* OAuth error display */}
+        {oauthError && (
+          <div className="auth-error" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', padding: '12px', borderRadius: '8px', marginBottom: '16px' }}>
+            <div style={{ fontWeight: 600, marginBottom: 4 }}>
+              {locale === 'zh' ? '🔴 登录失败' : '🔴 Sign In Failed'}
+            </div>
+            <div style={{ fontSize: '0.9em', color: 'rgba(239,68,68,0.8)', wordBreak: 'break-word' }}>
+              {oauthError}
+            </div>
+            <div style={{ fontSize: '0.8em', opacity: 0.6, marginTop: 8 }}>
+              {locale === 'zh' ? '请尝试其他登录方式，或联系管理员。' : 'Please try another sign-in method or contact admin.'}
+            </div>
+          </div>
+        )}
+
+        {/* International OAuth buttons */}
         <div className="oauth-buttons">
-          {providers.map((p) => (
+          {oauthProviders.map((p) => (
             <button
               key={p.id}
               className="oauth-btn"
               onClick={() => handleOAuth(p.id)}
-              disabled={loadingProvider !== ''}
+              disabled={!!loadingProvider}
             >
               <span className="oauth-icon">{p.icon}</span>
               <span className="oauth-text">
                 {loadingProvider === p.id
-                  ? 'Connecting...'
-                  : `${isSignUp ? 'Sign up' : 'Continue'} with ${p.name}`}
+                  ? (locale === 'zh' ? '连接中...' : 'Connecting...')
+                  : isSignUp
+                    ? (locale === 'zh' ? `使用 ${p.name} 注册` : `Sign up with ${p.name}`)
+                    : (locale === 'zh' ? `使用 ${p.name} 登录` : `Sign in with ${p.name}`)
+                }
               </span>
             </button>
           ))}
         </div>
 
         <div className="divider">
-          <span>or continue with email</span>
+          <span>{locale === 'zh' ? '或使用邮箱' : 'or continue with email'}</span>
         </div>
 
         {error && (
-          <p style={{ color: 'var(--red)', marginBottom: '1rem', fontSize: '0.88rem', background: 'rgba(243,139,168,0.08)', padding: '10px', borderRadius: '8px' }}>
-            {error}
-          </p>
+          <div className="auth-error">
+            <span>⚠️</span> {error}
+          </div>
         )}
 
-        <form onSubmit={handleEmailSubmit}>
+        <form onSubmit={handleEmailSubmit} className="auth-form">
           <div className="form-group">
-            <label>{t.email}</label>
+            <label>{t.login.email}</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
               placeholder="you@example.com"
+              autoComplete="email"
             />
           </div>
           <div className="form-group">
-            <label>{t.password}</label>
+            <label>{t.login.password}</label>
             <input
               type="password"
               value={password}
@@ -162,19 +154,100 @@ export default function LoginPage({ params }: { params: { locale: string } }) {
               required
               minLength={6}
               placeholder="••••••••"
+              autoComplete={isSignUp ? 'new-password' : 'current-password'}
             />
           </div>
           <button type="submit" className="btn-submit" disabled={loading}>
-            {loading ? '...' : isSignUp ? t.signUp : t.signIn}
+            {loading ? '...' : isSignUp ? t.login.signUp : t.login.signIn}
           </button>
         </form>
 
         <div className="auth-switch">
           {isSignUp ? (
-            <>{t.hasAccount} <a href={`/${locale}/login`}>{t.signInLink}</a></>
+            <>{t.login.hasAccount} <a href={`/${locale}/login`}>{t.login.signInLink}</a></>
           ) : (
-            <>{t.noAccount} <a href={`/${locale}/login?mode=signup`}>{t.signUpLink}</a></>
+            <>{t.login.noAccount} <a href={`/${locale}/login?mode=signup`}>{t.login.signUpLink}</a></>
           )}
+        </div>
+
+        {/* Chinese market section */}
+        {locale === 'zh' && (
+          <>
+            <div className="divider" style={{ marginTop: '1.5rem' }}>
+              <span>中国用户专属登录方式</span>
+            </div>
+            <div className="cn-auth-methods">
+              <div className="cn-auth-item coming-soon">
+                <span className="cn-auth-icon">💬</span>
+                <div>
+                  <strong>微信扫码登录</strong>
+                  <small>即将上线 · 需微信开放平台认证</small>
+                </div>
+              </div>
+              <div className="cn-auth-item coming-soon">
+                <span className="cn-auth-icon">📱</span>
+                <div>
+                  <strong>手机号登录</strong>
+                  <small>即将上线 · 支持短信验证码</small>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Payment methods info */}
+      <div className="auth-side-info">
+        <h3>{locale === 'zh' ? '💳 支持的支付方式' : '💳 Payment Methods'}</h3>
+        <div className="payment-methods">
+          <div className="payment-method-item">
+            <span className="pm-icon">💳</span>
+            <div>
+              <strong>{locale === 'zh' ? '信用卡' : 'Credit Card'}</strong>
+              <small>{locale === 'zh' ? 'Visa / Mastercard / 支持中国银联' : 'Visa / Mastercard / UnionPay'}</small>
+            </div>
+          </div>
+          <div className="payment-method-item">
+            <span className="pm-icon">🪙</span>
+            <div>
+              <strong>USDT (TRC20)</strong>
+              <small>{locale === 'zh' ? '即时到账，无手续费' : 'Instant, no fees'}</small>
+            </div>
+          </div>
+          {locale === 'zh' && (
+            <>
+              <div className="payment-method-item coming-soon">
+                <span className="pm-icon">💚</span>
+                <div>
+                  <strong>微信支付</strong>
+                  <small>即将上线</small>
+                </div>
+              </div>
+              <div className="payment-method-item coming-soon">
+                <span className="pm-icon">💙</span>
+                <div>
+                  <strong>支付宝</strong>
+                  <small>即将上线</small>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
+        <h3 style={{ marginTop: '1.5rem' }}>🚀 {locale === 'zh' ? '快速开始' : 'Quick Start'}</h3>
+        <div className="quick-start-info">
+          <div className="qs-step">
+            <span className="qs-num">1</span>
+            <span>{locale === 'zh' ? '注册即获 $2 免费额度' : 'Sign up → $2 free credits'}</span>
+          </div>
+          <div className="qs-step">
+            <span className="qs-num">2</span>
+            <span>{locale === 'zh' ? '用信用卡或 USDT 充值' : 'Top up with card or USDT'}</span>
+          </div>
+          <div className="qs-step">
+            <span className="qs-num">3</span>
+            <span>{locale === 'zh' ? '获取 API Key，60 秒开始调用' : 'Get your API key, start in 60s'}</span>
+          </div>
         </div>
       </div>
     </div>

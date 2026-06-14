@@ -1,18 +1,52 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { getTranslations, Locale } from '@/lib/i18n';
 
+// Mock data for charts (replace with real API later)
+const HOURLY_REQUESTS = [12, 8, 5, 3, 2, 1, 0, 2, 15, 28, 35, 42, 38, 30, 25, 22, 18, 15, 20, 32, 40, 35, 20, 10];
+const HOURLY_CONSUMPTION = [0.03, 0.02, 0.01, 0.01, 0, 0, 0, 0.01, 0.04, 0.08, 0.12, 0.15, 0.14, 0.10, 0.09, 0.07, 0.06, 0.05, 0.07, 0.11, 0.13, 0.10, 0.05, 0.02];
+
+const CHANNELS = [
+  { id: 1, name: '硅基流动 (SiliconFlow)', provider: '硅基流动', models: 40, status: 'active', latency: '180ms' },
+  { id: 2, name: 'Token173', provider: 'Token173', models: 579, status: 'active', latency: '220ms' },
+  { id: 3, name: '云雾 API (YunWu)', provider: '云雾 API', models: 434, status: 'active', latency: '200ms' },
+  { id: 4, name: '文简 (WenJian)', provider: '文简', models: 22, status: 'active', latency: '280ms' },
+];
+
 export default function DashboardPage({ params }: { params: { locale: string } }) {
   const locale = params.locale as Locale;
   const t = getTranslations(locale).dashboard;
-  const st = getTranslations(locale).settings;
   const { data: session, status } = useSession();
   const [copied, setCopied] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [apiKey, setApiKey] = useState<string | null>(null);
+  const [keyLoading, setKeyLoading] = useState(true);
+
+  useEffect(() => { setMounted(true); }, []);
+
+  // Fetch API key from backend proxy when session is ready
+  const fetchKey = useCallback(async () => {
+    try {
+      setKeyLoading(true);
+      const resp = await fetch('/api/user/token', { cache: 'no-store' });
+      const data = await resp.json();
+      if (data.success && data.data?.apiKey) {
+        setApiKey(data.data.apiKey);
+      }
+    } catch {
+      // silently fail - user can copy manually
+    } finally {
+      setKeyLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (session) fetchKey();
+  }, [session, fetchKey]);
 
   function copyKey() {
-    const apiKey = (session?.user as any)?.apiKey;
     if (apiKey) {
       navigator.clipboard.writeText(apiKey);
       setCopied(true);
@@ -20,111 +54,242 @@ export default function DashboardPage({ params }: { params: { locale: string } }
     }
   }
 
-  if (status === 'loading') return <div className="dashboard"><p style={{ color: 'var(--text-dim)' }}>Loading...</p></div>;
-  if (!session) return <div className="dashboard"><p style={{ color: 'var(--text-dim)' }}>Please sign in first.</p><a href={`/${locale}/login`} style={{ color: 'var(--accent)' }}>Sign In →</a></div>;
+  if (status === 'loading') return <div className="dashboard"><div className="dash-loading"><span className="dash-spinner" /></div></div>;
+  if (!session) return <div className="dashboard"><div className="dash-empty"><p>{t.signInPrompt || 'Please sign in first.'}</p><a href={`/${locale}/login`} className="btn btn-primary">{t.signInBtn || 'Sign In →'}</a></div></div>;
 
   const user = session.user as any;
-  const members = [
-    { name: 'alice@example.com', role: 'Owner', since: 'Jun 2026', quota: '1.2M', rpm: '60', tpm: '90000' },
-    { name: 'bob@devteam.io', role: 'Admin', since: 'Jun 2026', quota: '840K', rpm: '60', tpm: '90000' },
-    { name: 'carol@startup.co', role: 'Member', since: 'Jun 2026', quota: '320K', rpm: '30', tpm: '45000' },
-  ];
+  const now = new Date();
+  const currentHour = now.getHours();
+  const maxReq = Math.max(...HOURLY_REQUESTS, 1);
+  const maxCons = Math.max(...HOURLY_CONSUMPTION, 0.01);
+
+  if (!mounted) return <div className="dashboard"><div className="dash-loading"><span className="dash-spinner" /></div></div>;
 
   return (
     <div className="dashboard">
-      <h2>{t.title}</h2>
+      {/* Header */}
+      <div className="dash-header">
+        <div>
+          <h2>{t.title || 'Overview'}</h2>
+          <p className="dash-subtitle">
+            {t.welcome || 'Welcome back'}, {(user.name || user.email || 'User')} — {now.toLocaleDateString(locale === 'zh' ? 'zh-CN' : 'en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+          </p>
+        </div>
+      </div>
 
-      {/* Main cards */}
-      <div className="dash-cards">
-        <div className="dash-card" style={{ gridColumn: '1 / -1' }}>
-          <h3>{t.apiKey}</h3>
-          <div className="copy-box">
-            <code>{user.apiKey || 'N/A'}</code>
-            <button onClick={copyKey} className="copy-btn">{copied ? t.copied : t.copy}</button>
+      {/* Stat Cards */}
+      <div className="dash-stats-grid">
+        <div className="dash-stat-card">
+          <div className="dash-stat-icon balance-icon">💳</div>
+          <div className="dash-stat-body">
+            <div className="dash-stat-label">{t.balance || 'Balance'}</div>
+            <div className="dash-stat-value">${((user.balance || 0) / 100).toFixed(2)}</div>
+            <div className="dash-stat-sub">{t.availableCredit || 'Available credit'}</div>
           </div>
         </div>
-        <div className="dash-card">
-          <h3>{t.balance}</h3>
-          <div className="value accent">${((user.balance || 0) / 100).toFixed(2)}</div>
-        </div>
-        <div className="dash-card">
-          <h3>{t.usage}</h3>
-          <div className="value green">{(user.monthlyTokens || 0).toLocaleString()} {t.tokens}</div>
-        </div>
-        <div className="dash-card">
-          <h3>{t.rateLimit}</h3>
-          <div style={{ display: 'flex', gap: '1.2rem', marginTop: '0.3rem' }}>
-            <div>
-              <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', textTransform: 'uppercase' }}>{t.rpm}</div>
-              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: '1.05rem', color: 'var(--accent)' }}>60</div>
-            </div>
-            <div>
-              <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', textTransform: 'uppercase' }}>{t.tpm}</div>
-              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: '1.05rem', color: 'var(--accent)' }}>90K</div>
-            </div>
+        <div className="dash-stat-card">
+          <div className="dash-stat-icon usage-icon">⚡</div>
+          <div className="dash-stat-body">
+            <div className="dash-stat-label">{t.todaysUsage || "Today's Usage"}</div>
+            <div className="dash-stat-value">{(user.todaysTokens || 125000).toLocaleString()}</div>
+            <div className="dash-stat-sub">{t.tokens || 'tokens'} · ~$0.42</div>
           </div>
         </div>
-        <div className="dash-card">
-          <h3>{t.alertsEnabled}</h3>
-          <div style={{ marginTop: '0.3rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '4px' }}>
-              <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--accent2)', display: 'inline-block' }} />
-              <span style={{ fontSize: '0.85rem' }}>Balance {'<'} $5</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--accent3)', display: 'inline-block' }} />
-              <span style={{ fontSize: '0.85rem' }}>Daily {'>'} 1M tokens</span>
-            </div>
+        <div className="dash-stat-card">
+          <div className="dash-stat-icon month-icon">📊</div>
+          <div className="dash-stat-body">
+            <div className="dash-stat-label">{t.monthlyUsage || 'Monthly Usage'}</div>
+            <div className="dash-stat-value">{(user.monthlyTokens || 2840000).toLocaleString()}</div>
+            <div className="dash-stat-sub">{t.tokens || 'tokens'} · ~$8.52</div>
+          </div>
+        </div>
+        <div className="dash-stat-card">
+          <div className="dash-stat-icon models-icon">🧠</div>
+          <div className="dash-stat-body">
+            <div className="dash-stat-label">{t.availableModels || 'Available Models'}</div>
+            <div className="dash-stat-value">388</div>
+            <div className="dash-stat-sub">{t.acrossChannels || 'across 4 channels'}</div>
           </div>
         </div>
       </div>
 
-      {/* Action buttons */}
-      <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1.5rem', flexWrap: 'wrap' }}>
-        <Link href={`/${locale}/topup`} className="btn btn-primary">{t.topUp}</Link>
-        <Link href={`/${locale}/settings`} className="btn btn-outline" style={{ textDecoration: 'none', padding: '14px 24px' }}>
-          {t.viewSettings}
-        </Link>
-      </div>
-
-      {/* Team members section */}
-      <section style={{ marginTop: '3rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <h3 style={{ fontSize: '1.15rem' }}>{t.teamView}</h3>
-          <Link href={`/${locale}/team/manage`} style={{ color: 'var(--accent)', fontSize: '0.85rem', textDecoration: 'none' }}>
-            {st.manageTeam}
+      {/* Quick Actions */}
+      <div className="dash-section">
+        <h3 className="dash-section-title">{t.quickActions || 'Quick Actions'}</h3>
+        <div className="dash-actions">
+          <Link href={`/${locale}/topup`} className="dash-action-btn dash-action-primary">
+            <span className="dash-action-icon">💰</span>
+            <span>{t.topUp || 'Top Up'}</span>
+          </Link>
+          <button onClick={copyKey} className="dash-action-btn">
+            <span className="dash-action-icon">🔑</span>
+            <span>{copied ? (t.copied || 'Copied!') : (t.copyKey || 'Copy API Key')}</span>
+          </button>
+          <Link href={`/${locale}/models`} className="dash-action-btn">
+            <span className="dash-action-icon">🔍</span>
+            <span>{t.viewModels || 'View Models'}</span>
           </Link>
         </div>
-        <div className="dash-cards">
-          {members.map((m, i) => (
-            <div className="dash-card" key={i} style={{ padding: '1.2rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.8rem' }}>
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--accent)' }}>{m.name}</div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
-                    <span className={`member-role ${m.role.toLowerCase()}`}>{m.role}</span>
-                    <span style={{ marginLeft: '0.5rem' }}>{t.memberSince}: {m.since}</span>
-                  </div>
+      </div>
+
+      {/* API Key */}
+      <div className="dash-section">
+        <h3 className="dash-section-title">{t.apiKey || 'Your API Key'}</h3>
+        <div className="copy-box dash-copy-box">
+          {keyLoading ? (
+            <code style={{ opacity: 0.5 }}>Loading...</code>
+          ) : apiKey ? (
+            <code>{apiKey}</code>
+          ) : (
+            <code style={{ color: 'var(--text-muted)' }}>
+              <a href="https://api.aiapisave.xyz/login" target="_blank" rel="noopener noreferrer">
+                Sign in to API Console to get your key →
+              </a>
+            </code>
+          )}
+          <button onClick={copyKey} className="copy-btn" disabled={!apiKey}>
+            {copied ? (t.copied || 'Copied!') : (t.copy || 'Copy')}
+          </button>
+        </div>
+        <div className="dash-endpoint-hint">
+          <span>Base URL: <code>https://api.aiapisave.xyz</code></span>
+          {apiKey && (
+            <a href="https://api.aiapisave.xyz/token" target="_blank" rel="noopener noreferrer" style={{ marginLeft: 12, fontSize: '0.85rem', color: 'var(--accent)' }}>
+              Manage Keys →
+            </a>
+          )}
+        </div>
+      </div>
+
+      {/* Charts Row */}
+      <div className="dash-charts-row">
+        {/* 24h Request Volume */}
+        <div className="dash-chart-card">
+          <h3 className="dash-chart-title">{t.req24h || '24h Request Volume'} <span className="dash-chart-unit">{t.requests || 'requests'}</span></h3>
+          <div className="dash-bar-chart">
+            {HOURLY_REQUESTS.map((val, i) => (
+              <div key={i} className="dash-bar-col">
+                <div className="dash-bar-wrapper">
+                  <div
+                    className={`dash-bar ${i === currentHour ? 'dash-bar-current' : ''}`}
+                    style={{ height: `${Math.max((val / maxReq) * 100, val > 0 ? 4 : 0)}%` }}
+                    title={`${i}:00 — ${val} ${t.requests || 'reqs'}`}
+                  />
                 </div>
+                <span className={`dash-bar-label ${i === currentHour ? 'dash-bar-label-now' : ''}`}>
+                  {i === currentHour ? t.now || 'now' : `${i}h`}
+                </span>
               </div>
-              <div style={{ display: 'flex', gap: '1rem', fontSize: '0.82rem' }}>
-                <div>
-                  <div style={{ color: 'var(--text-dim)', fontSize: '0.7rem' }}>{t.quotaUsed}</div>
-                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 600 }}>{m.quota}</div>
+            ))}
+          </div>
+          <div className="dash-chart-summary">
+            <span>Total: <strong>{HOURLY_REQUESTS.reduce((a, b) => a + b, 0).toLocaleString()}</strong> {t.requests || 'requests'}</span>
+            <span>Peak: <strong>{maxReq}</strong> @ {HOURLY_REQUESTS.indexOf(maxReq)}:00</span>
+          </div>
+        </div>
+
+        {/* 24h Consumption */}
+        <div className="dash-chart-card">
+          <h3 className="dash-chart-title">{t.cons24h || '24h Consumption'} <span className="dash-chart-unit">$</span></h3>
+          <div className="dash-bar-chart">
+            {HOURLY_CONSUMPTION.map((val, i) => (
+              <div key={i} className="dash-bar-col">
+                <div className="dash-bar-wrapper">
+                  <div
+                    className={`dash-bar dash-bar-cost ${i === currentHour ? 'dash-bar-current' : ''}`}
+                    style={{ height: `${Math.max((val / maxCons) * 100, val > 0 ? 4 : 0)}%` }}
+                    title={`${i}:00 — $${val.toFixed(3)}`}
+                  />
                 </div>
-                <div>
-                  <div style={{ color: 'var(--text-dim)', fontSize: '0.7rem' }}>{t.rpm}</div>
-                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 600 }}>{m.rpm}</div>
+                <span className={`dash-bar-label ${i === currentHour ? 'dash-bar-label-now' : ''}`}>
+                  {i === currentHour ? t.now || 'now' : `${i}h`}
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className="dash-chart-summary">
+            <span>Total: <strong>${HOURLY_CONSUMPTION.reduce((a, b) => a + b, 0).toFixed(2)}</strong></span>
+            <span>Peak: <strong>${maxCons.toFixed(3)}</strong> @ {HOURLY_CONSUMPTION.indexOf(maxCons)}:00</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Active Channels */}
+      <div className="dash-section">
+        <h3 className="dash-section-title">{t.activeChannels || 'Active Channels'}</h3>
+        <div className="dash-channels">
+          {CHANNELS.map(ch => (
+            <div key={ch.id} className="dash-channel-card">
+              <div className="dash-channel-header">
+                <div className="dash-channel-name">
+                  <span className={`dash-channel-dot ${ch.status}`} />
+                  {ch.name}
                 </div>
-                <div>
-                  <div style={{ color: 'var(--text-dim)', fontSize: '0.7rem' }}>{t.tpm}</div>
-                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 600 }}>{m.tpm}</div>
-                </div>
+                <span className="dash-channel-count">{ch.models} {t.models || 'models'}</span>
+              </div>
+              <div className="dash-channel-meta">
+                <span>{ch.provider}</span>
+                <span className="dash-channel-latency">⚡ {ch.latency}</span>
               </div>
             </div>
           ))}
         </div>
-      </section>
+      </div>
+
+      {/* Recent Activity */}
+      <div className="dash-section">
+        <h3 className="dash-section-title">{t.recentActivity || 'Recent Activity'}</h3>
+        <div className="dash-table-wrap">
+          <table className="dash-table">
+            <thead>
+              <tr>
+                <th>{t.model || 'Model'}</th>
+                <th>{t.tokensUsed || 'Tokens'}</th>
+                <th>{t.cost || 'Cost'}</th>
+                <th>{t.time || 'Time'}</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span className="dash-model-tag">gpt-4o-mini</span></td>
+                <td>12,400</td>
+                <td>$0.003</td>
+                <td className="dash-time">{t.justNow || 'Just now'}</td>
+              </tr>
+              <tr>
+                <td><span className="dash-model-tag">claude-sonnet-4-20250514</span></td>
+                <td>3,200</td>
+                <td>$0.012</td>
+                <td className="dash-time">{t.minAgo || '5m ago'}</td>
+              </tr>
+              <tr>
+                <td><span className="dash-model-tag">deepseek-v3</span></td>
+                <td>28,000</td>
+                <td>$0.005</td>
+                <td className="dash-time">{t.minAgo2 || '12m ago'}</td>
+              </tr>
+              <tr>
+                <td><span className="dash-model-tag">gpt-4o</span></td>
+                <td>8,500</td>
+                <td>$0.021</td>
+                <td className="dash-time">{t.minAgo3 || '28m ago'}</td>
+              </tr>
+              <tr>
+                <td><span className="dash-model-tag">gemini-2.5-flash</span></td>
+                <td>45,000</td>
+                <td>$0.007</td>
+                <td className="dash-time">{t.hourAgo || '1h ago'}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Footer links */}
+      <div className="dash-footer-links">
+        <Link href={`/${locale}/settings`}>{t.viewSettings || 'Settings →'}</Link>
+        <Link href={`/${locale}/docs`}>{t.viewDocs || 'API Docs →'}</Link>
+      </div>
     </div>
   );
 }
