@@ -58,9 +58,16 @@ export async function GET() {
       return { id: m.id, owned_by: m.owned_by || 'unknown', pricing };
     });
 
-    // Only show models with both input AND output pricing configured
+    // Only show models with both input AND output pricing configured,
+    // AND filter out models with obviously wrong/broken pricing (output >= $50/M)
     const pricedModels = allModels.filter(
-      (m: ModelEntry): boolean => (!!m.pricing && m.pricing.input !== '—' && m.pricing.output !== '—')
+      (m: ModelEntry): boolean => {
+        if (!m.pricing || m.pricing.input === '—' || m.pricing.output === '—') return false;
+        // Filter out placeholder prices: output >= $50 per million tokens
+        const outVal = parseFloat(m.pricing.output.replace('$', ''));
+        if (isNaN(outVal) || outVal >= 50) return false;
+        return true;
+      }
     );
 
     // Sort by usage frequency rank (descending), then alphabetically
