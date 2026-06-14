@@ -111,6 +111,8 @@ const translations = {
       available: 'models available',
       noResults: 'No models found. Try different filters.',
       showAll: 'Show All Models',
+      showMore: 'Show more',
+      showLess: 'Show less',
       priced: 'Priced',
       detail: {
         overview: 'Overview',
@@ -492,6 +494,8 @@ const translations = {
       available: '个可用模型',
       noResults: '未找到匹配的模型，请尝试其他筛选条件。',
       showAll: '显示全部模型',
+      showMore: '展开更多',
+      showLess: '收起',
       priced: '已定价',
       detail: {
         overview: '概览',

@@ -130,6 +130,7 @@ export default function ModelsPage({ params }: { params: { locale: string } }) {
   const [copied, setCopied] = useState('');
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<ModelItem | null>(null);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetch('/api/models')
@@ -231,7 +232,11 @@ export default function ModelsPage({ params }: { params: { locale: string } }) {
               });
               // Sort groups by provider popularity
               groups.sort((a, b) => (PROVIDER_ORDER[a.provider] || 99) - (PROVIDER_ORDER[b.provider] || 99));
-              return groups.map((group, gi) => (
+              return groups.map((group, gi) => {
+                const isExpanded = expanded.has(group.provider);
+                const visibleModels = isExpanded ? group.models : group.models.slice(0, 3);
+                const hiddenCount = group.models.length - 3;
+                return (
                 <div key={gi} className="provider-group">
                   <h2 className="provider-group-title">
                     <span className="provider-group-icon">{getProviderIcon(group.provider)}</span>
@@ -239,7 +244,7 @@ export default function ModelsPage({ params }: { params: { locale: string } }) {
                     <span className="provider-group-count">{group.models.length}</span>
                   </h2>
                   <div className="models-result-grid">
-                    {group.models.map((m) => {
+                    {visibleModels.map((m) => {
                       const p = getProvider(m.id, m.owned_by);
                       const c = getCapability(m.id);
                       return (
@@ -270,8 +275,22 @@ export default function ModelsPage({ params }: { params: { locale: string } }) {
                       );
                     })}
                   </div>
+                  {hiddenCount > 0 && (
+                    <button
+                      className="btn-outline show-more-btn"
+                      onClick={() => setExpanded(prev => {
+                        const next = new Set(prev);
+                        if (next.has(group.provider)) next.delete(group.provider);
+                        else next.add(group.provider);
+                        return next;
+                      })}
+                    >
+                      {isExpanded ? t.models.showLess : `${t.models.showMore} (+${hiddenCount})`}
+                    </button>
+                  )}
                 </div>
-              ));
+              );
+              });
             })()}
 
             {/* Pagination */}

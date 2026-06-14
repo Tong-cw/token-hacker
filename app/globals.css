@@ -1630,4 +1630,8 @@ footer p + p { margin-top: 4px; }
   background: var(--card-bg); padding: 0.15rem 0.5rem; border-radius: 10px;
   margin-left: auto;
 }
+.show-more-btn {
+  display: block; margin: 0.5rem auto 0; padding: 0.4rem 1.5rem;
+  font-size: 0.82rem; cursor: pointer;
+}
 .page-info { color: var(--text-dim); font-size: 0.78rem; margin-left: 0.5rem; }
