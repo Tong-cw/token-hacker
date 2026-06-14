@@ -78,10 +78,10 @@ export default function DashboardPage({ params }: { params: { locale: string } }
 
   const formatTimeAgo = (ts: number) => {
     const mins = Math.floor((Date.now() / 1000 - ts) / 60);
-    if (mins < 1) return t.justNow || 'Just now';
-    if (mins < 60) return `${mins}${t.minAgoUnit || 'm ago'}`;
+    if (mins < 1) return (t as any).justNow || 'Just now';
+    if (mins < 60) return `${mins}m ago`;
     const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs}${t.hourAgoUnit || 'h ago'}`;
+    if (hrs < 24) return `${hrs}h ago`;
     return `${Math.floor(hrs / 24)}d ago`;
   };
 
@@ -271,7 +271,7 @@ export default function DashboardPage({ params }: { params: { locale: string } }
             </thead>
             <tbody>
               {recentLogs.length === 0 && !dashLoading ? (
-                <tr><td colSpan={4} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>{t.noActivity || 'No recent activity'}</td></tr>
+                <tr><td colSpan={4} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>{((t as any).noActivity as string) || 'No recent activity'}</td></tr>
               ) : recentLogs.map((log, i) => (
                 <tr key={i}>
                   <td><span className="dash-model-tag">{log.model}</span></td>

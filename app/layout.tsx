@@ -1,6 +1,17 @@
 import './globals.css';
 import { ReactNode } from 'react';
 import Providers from '@/components/Providers';
+import type { Viewport } from 'next';
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: [
+    { media: '(prefers-color-scheme: dark)', color: '#0a0e14' },
+    { media: '(prefers-color-scheme: light)', color: '#f5f6fa' },
+  ],
+};
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
