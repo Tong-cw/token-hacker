@@ -98,8 +98,10 @@ export default function Nav({ locale }: { locale: Locale }) {
           {/* Mobile hamburger */}
           <button
             className="hamburger"
-            onClick={() => setMobileNavOpen(!mobileNavOpen)}
+            type="button"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMobileNavOpen(prev => !prev); }}
             aria-label="Toggle menu"
+            aria-expanded={mobileNavOpen}
           >
             <span className={mobileNavOpen ? 'hamburger-line open' : 'hamburger-line'} />
           </button>

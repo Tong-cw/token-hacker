@@ -873,9 +873,9 @@ footer p + p { margin-top: 4px; }
   background: var(--bg); z-index: 99; padding: 0 1.5rem;
   flex-direction: column; overflow-y: auto; overflow-x: hidden;
   transform: translateX(110%); transition: transform 0.3s ease;
-  visibility: hidden;
+  visibility: hidden; pointer-events: none;
 }
-.mobile-nav-open { transform: translateX(0); visibility: visible; }
+.mobile-nav-open { transform: translateX(0); visibility: visible; pointer-events: auto; }
 .mobile-nav-links { display: flex; flex-direction: column; padding: 1rem 0; flex: 1; }
 .mobile-nav-link {
   display: block; padding: 1rem 0;
