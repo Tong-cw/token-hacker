@@ -1615,4 +1615,19 @@ footer p + p { margin-top: 4px; }
 .page-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
 .page-btn:disabled { opacity: 0.35; cursor: default; }
 .page-ellipsis { color: var(--text-dim); padding: 0 0.25rem; }
+
+/* Provider groups on models page */
+.provider-group { margin-bottom: 2.5rem; }
+.provider-group-title {
+  font-size: 1.1rem; font-weight: 600; color: var(--text);
+  display: flex; align-items: center; gap: 0.5rem;
+  margin-bottom: 1rem; padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+.provider-group-icon { font-size: 1.3rem; }
+.provider-group-count {
+  font-size: 0.75rem; font-weight: 400; color: var(--text-dim);
+  background: var(--card-bg); padding: 0.15rem 0.5rem; border-radius: 10px;
+  margin-left: auto;
+}
 .page-info { color: var(--text-dim); font-size: 0.78rem; margin-left: 0.5rem; }

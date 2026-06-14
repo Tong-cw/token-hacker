@@ -51,6 +51,55 @@ function getCapability(id: string): string {
   return 'chat';
 }
 
+function getProviderIcon(provider: string): string {
+  const icons: Record<string, string> = {
+    'OpenAI': '🤖',
+    'Anthropic': '🧠',
+    'Google': '🔍',
+    'Meta': '👁️',
+    'DeepSeek': '🐋',
+    'X.AI': '🚀',
+    'Qwen': '☁️',
+    'Mistral': '💨',
+    'Zhipu': '📚',
+    'Moonshot': '🌙',
+    'ByteDance': '🎵',
+    '01.AI': '⚡',
+    'MiniMax': '🎯',
+    'Tencent': '💬',
+    'Baidu': '🔵',
+    'iFlytek': '🎤',
+    'Embedding': '📊',
+    'Audio': '🎧',
+    'Media': '🎨',
+    'SiliconFlow': '🔮',
+  };
+  return icons[provider] || '📦';
+}
+
+const PROVIDER_ORDER: Record<string, number> = {
+  'OpenAI': 1,
+  'Anthropic': 2,
+  'Google': 3,
+  'DeepSeek': 4,
+  'X.AI': 5,
+  'Meta': 6,
+  'Qwen': 7,
+  'Mistral': 8,
+  'Zhipu': 9,
+  'Moonshot': 10,
+  'ByteDance': 11,
+  '01.AI': 12,
+  'MiniMax': 13,
+  'Tencent': 14,
+  'Baidu': 15,
+  'iFlytek': 16,
+  'Embedding': 17,
+  'Audio': 18,
+  'Media': 19,
+  'SiliconFlow': 20,
+};
+
 const PAGE_SIZE = 30;
 
 function copyCode(model: string) {
@@ -165,39 +214,63 @@ export default function ModelsPage({ params }: { params: { locale: string } }) {
           <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-dim)' }}>⏳ {t.models.loading}</div>
         ) : (
           <>
-            <div className="models-result-grid">
-              {displayed.map((m) => {
+            {/* Group by provider, sorted by popularity */}
+            {(() => {
+              const groups: { provider: string; models: typeof displayed }[] = [];
+              const seen = new Map<string, number>();
+              displayed.forEach(m => {
                 const p = getProvider(m.id, m.owned_by);
-                const c = getCapability(m.id);
-                return (
-                  <div className="model-detail-card model-clickable" key={m.id} onClick={() => setSelected(m)}>
-                    <div className="model-detail-header">
-                      <div style={{ minWidth: 0, flex: 1 }}>
-                        <span className="model-provider-tag">{p}</span>
-                        <h3 style={{ fontSize: '0.92rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={m.id}>{m.id}</h3>
-                      </div>
-                      <div className="model-detail-tags">
-                        <span className="capability-tag">{c}</span>
-                        {m.pricing && m.pricing.input !== '—' && <span className="tag tag-best" style={{ fontSize: '0.65rem' }}>{t.models.priced}</span>}
-                      </div>
-                    </div>
-                    <div className="model-detail-stats" style={{ marginBottom: '0.6rem' }}>
-                      <div className="stat">
-                        <span className="stat-label">{t.models.detail.input} /1M</span>
-                        <span className="stat-value price">{m.pricing?.input}</span>
-                      </div>
-                      <div className="stat">
-                        <span className="stat-label">{t.models.detail.output} /1M</span>
-                        <span className="stat-value price">{m.pricing?.output}</span>
-                      </div>
-                    </div>
-                    <button className="copy-code-btn" onClick={(e) => handleCopy(m.id, e)}>
-                      {copied === m.id ? `✅ ${t.models.copied}` : t.models.copyCode}
-                    </button>
+                if (seen.has(p)) {
+                  groups[seen.get(p)!].models.push(m);
+                } else {
+                  seen.set(p, groups.length);
+                  groups.push({ provider: p, models: [m] });
+                }
+              });
+              // Sort groups by provider popularity
+              groups.sort((a, b) => (PROVIDER_ORDER[a.provider] || 99) - (PROVIDER_ORDER[b.provider] || 99));
+              return groups.map((group, gi) => (
+                <div key={gi} className="provider-group">
+                  <h2 className="provider-group-title">
+                    <span className="provider-group-icon">{getProviderIcon(group.provider)}</span>
+                    {group.provider}
+                    <span className="provider-group-count">{group.models.length}</span>
+                  </h2>
+                  <div className="models-result-grid">
+                    {group.models.map((m) => {
+                      const p = getProvider(m.id, m.owned_by);
+                      const c = getCapability(m.id);
+                      return (
+                        <div className="model-detail-card model-clickable" key={m.id} onClick={() => setSelected(m)}>
+                          <div className="model-detail-header">
+                            <div style={{ minWidth: 0, flex: 1 }}>
+                              <h3 style={{ fontSize: '0.92rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={m.id}>{m.id}</h3>
+                            </div>
+                            <div className="model-detail-tags">
+                              <span className="capability-tag">{c}</span>
+                              {m.pricing && m.pricing.input !== '—' && <span className="tag tag-best" style={{ fontSize: '0.65rem' }}>{t.models.priced}</span>}
+                            </div>
+                          </div>
+                          <div className="model-detail-stats" style={{ marginBottom: '0.6rem' }}>
+                            <div className="stat">
+                              <span className="stat-label">{t.models.detail.input} /1M</span>
+                              <span className="stat-value price">{m.pricing?.input}</span>
+                            </div>
+                            <div className="stat">
+                              <span className="stat-label">{t.models.detail.output} /1M</span>
+                              <span className="stat-value price">{m.pricing?.output}</span>
+                            </div>
+                          </div>
+                          <button className="copy-code-btn" onClick={(e) => handleCopy(m.id, e)}>
+                            {copied === m.id ? `✅ ${t.models.copied}` : t.models.copyCode}
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              ));
+            })()}
 
             {/* Pagination */}
             {totalPages > 1 && (
