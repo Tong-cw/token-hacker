@@ -17,12 +17,12 @@ function CodeBlock({ children }: { children: React.ReactNode }) {
 }
 
 const featuredModels = [
-  { name: 'DeepSeek V4 Pro', provider: 'DeepSeek', input: '$0.98', output: '$3.92', tag: 'best' },
-  { name: 'GPT-4o', provider: 'OpenAI', input: '$2.50', output: '$10.00', tag: '' },
-  { name: 'Claude 4.6 Sonnet', provider: 'Anthropic', input: '$3.00', output: '$15.00', tag: 'rec' },
-  { name: 'Gemini 3.1 Pro', provider: 'Google', input: '$1.25', output: '$5.00', tag: '' },
-  { name: 'DeepSeek V4 Flash', provider: 'DeepSeek', input: '$0.14', output: '$0.56', tag: 'best' },
-  { name: 'Claude Opus 4.7', provider: 'Anthropic', input: '$15.00', output: '$75.00', tag: '' },
+  { name: 'GPT-4o', provider: 'OpenAI', input: '$1.09', output: '$4.38', tag: 'best' },
+  { name: 'Claude Sonnet 4', provider: 'Anthropic', input: '$1.20', output: '$6.00', tag: 'rec' },
+  { name: 'DeepSeek V4 Pro', provider: 'DeepSeek', input: '$1.88', output: '$3.75', tag: 'best' },
+  { name: 'GPT-5.4', provider: 'OpenAI', input: '$0.73', output: '$4.38', tag: '' },
+  { name: 'Gemini 2.5 Pro', provider: 'Google', input: '$0.23', output: '$1.88', tag: '' },
+  { name: 'Claude Opus 4', provider: 'Anthropic', input: '$6.00', output: '$30.00', tag: '' },
 ];
 
 export default function HomePage({ params }: { params: { locale: string } }) {
