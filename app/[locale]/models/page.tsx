@@ -128,7 +128,6 @@ export default function ModelsPage({ params }: { params: { locale: string } }) {
   const [provider, setProvider] = useState('All');
   const [capability, setCapability] = useState('all');
   const [copied, setCopied] = useState('');
-  const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<ModelItem | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
@@ -155,17 +154,15 @@ export default function ModelsPage({ params }: { params: { locale: string } }) {
     return true;
   });
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const safePage = Math.min(page, totalPages);
-  const start = (safePage - 1) * PAGE_SIZE;
-  const displayed = filtered.slice(start, start + PAGE_SIZE);
+  // Use all filtered models — groups handle overflow via Show more button
+  const displayed = filtered;
 
   // Reset page when filters change
   const setFilter = (key: string, val: string) => {
     if (key === 'search') setSearch(val);
     if (key === 'provider') setProvider(val);
     if (key === 'capability') setCapability(val);
-    setPage(1);
+    setExpanded(new Set());
   };
 
   const handleCopy = (model: string, e?: React.MouseEvent) => {
@@ -180,11 +177,6 @@ export default function ModelsPage({ params }: { params: { locale: string } }) {
     setCopied(model);
     setTimeout(() => setCopied(''), 2000);
   };
-
-  const pageNumbers: number[] = [];
-  for (let i = Math.max(1, safePage - 2); i <= Math.min(totalPages, safePage + 2); i++) {
-    pageNumbers.push(i);
-  }
 
   return (
     <div className="models-page">
@@ -292,30 +284,6 @@ export default function ModelsPage({ params }: { params: { locale: string } }) {
               );
               });
             })()}
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="pagination">
-                <button className="page-btn" disabled={safePage <= 1} onClick={() => setPage(p => p - 1)}>←</button>
-                {safePage > 3 && (
-                  <>
-                    <button className="page-btn" onClick={() => setPage(1)}>1</button>
-                    <span className="page-ellipsis">…</span>
-                  </>
-                )}
-                {pageNumbers.map(n => (
-                  <button key={n} className={`page-btn ${n === safePage ? 'active' : ''}`} onClick={() => setPage(n)}>{n}</button>
-                ))}
-                {safePage < totalPages - 2 && (
-                  <>
-                    <span className="page-ellipsis">…</span>
-                    <button className="page-btn" onClick={() => setPage(totalPages)}>{totalPages}</button>
-                  </>
-                )}
-                <button className="page-btn" disabled={safePage >= totalPages} onClick={() => setPage(p => p + 1)}>→</button>
-                <span className="page-info">{safePage} / {totalPages}</span>
-              </div>
-            )}
 
             {filtered.length === 0 && !loading && (
               <p style={{ textAlign: 'center', color: 'var(--text-dim)', padding: '3rem' }}>{t.models.noResults}</p>
