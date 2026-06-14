@@ -1,6 +1,9 @@
 import { auth } from '@/lib/auth';
 import { NextResponse, NextRequest } from 'next/server';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 // GET - get current user's API key
 export async function GET(request: NextRequest) {
   const session = await auth();
