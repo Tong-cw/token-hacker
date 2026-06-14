@@ -51,7 +51,7 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; overflow-x: hidden; width: 100%; }
 
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -904,7 +904,7 @@ footer p + p { margin-top: 4px; }
   .nav-links { display: none; }
   .hamburger { display: flex; }
   .mobile-nav { display: flex; }
-  .nav-inner { flex-wrap: nowrap; height: 62px; padding: 0; }
+  .nav-inner { flex-wrap: nowrap; height: 62px; padding: 0; max-width: 100%; }
   .nav-left { gap: 0; }
   .logo { font-size: 1.1rem; }
   .logo-icon { font-size: 1.1rem; }
@@ -921,7 +921,7 @@ footer p + p { margin-top: 4px; }
   .page-header h1, .pricing-hero h1, .team-hero h1 { font-size: 1.8rem; }
 
   /* --- Containers --- */
-  .container { padding: 0 1.25rem; }
+  .container { padding: 0 1.25rem; max-width: 100%; }
   .section { padding: 3rem 1rem; }
   .section-alt { padding: 3rem 1rem; }
 
