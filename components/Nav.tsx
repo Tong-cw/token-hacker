@@ -49,66 +49,68 @@ export default function Nav({ locale }: { locale: Locale }) {
   ];
 
   return (
-    <nav>
-      <div className="nav-inner">
-        <div className="nav-left">
-          <Link href={`/${locale}`} className="logo" onClick={() => setMobileNavOpen(false)}>
-            <span className="logo-icon">⚡</span>Token Hacker
-          </Link>
-          <ul className="nav-links">
-            {navLinks.map(link => (
-              <li key={link.href}><Link href={link.href}>{link.label}</Link></li>
-            ))}
-          </ul>
+    <>
+      <nav>
+        <div className="nav-inner">
+          <div className="nav-left">
+            <Link href={`/${locale}`} className="logo" onClick={() => setMobileNavOpen(false)}>
+              <span className="logo-icon">⚡</span>Token Hacker
+            </Link>
+            <ul className="nav-links">
+              {navLinks.map(link => (
+                <li key={link.href}><Link href={link.href}>{link.label}</Link></li>
+              ))}
+            </ul>
+          </div>
+          <div className="nav-right">
+            {status === 'authenticated' ? (
+              <div className="user-menu" ref={menuRef}>
+                <button className="btn-user" onClick={() => setMenuOpen(!menuOpen)}>
+                  <span className="user-avatar">
+                    {session?.user?.name?.[0]?.toUpperCase() || 'U'}
+                  </span>
+                  <span className="user-name">{session?.user?.name || session?.user?.email}</span>
+                  <span className="menu-arrow">▾</span>
+                </button>
+                {menuOpen && (
+                  <div className="dropdown-menu">
+                    <Link href={`/${locale}/dashboard`} className="dropdown-item">
+                      {String.fromCodePoint(0x1F4CA)} {t.dashboard}
+                    </Link>
+                    <Link href={`/${locale}/settings`} className="dropdown-item">
+                      {String.fromCodePoint(0x2699, 0xFE0F)} {t.settings}
+                    </Link>
+                    <div className="dropdown-divider" />
+                    <button onClick={() => signOut()} className="dropdown-item dropdown-logout">
+                      {String.fromCodePoint(0x1F69A)} {t.logout}
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : status === 'loading' ? (
+              <div className="nav-skeleton" />
+            ) : (
+              <Link href={`/${locale}/login`} className="btn-nav">{t.login}</Link>
+            )}
+            <ThemeToggle />
+            <Link href={otherPath} className="lang-toggle">
+              {otherLocale === 'zh' ? '中文' : 'EN'}
+            </Link>
+            {/* Mobile hamburger */}
+            <button
+              className="hamburger"
+              type="button"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMobileNavOpen(prev => !prev); }}
+              aria-label="Toggle menu"
+              aria-expanded={mobileNavOpen}
+            >
+              <span className={mobileNavOpen ? 'hamburger-line open' : 'hamburger-line'} />
+            </button>
+          </div>
         </div>
-        <div className="nav-right">
-          {status === 'authenticated' ? (
-            <div className="user-menu" ref={menuRef}>
-              <button className="btn-user" onClick={() => setMenuOpen(!menuOpen)}>
-                <span className="user-avatar">
-                  {session?.user?.name?.[0]?.toUpperCase() || 'U'}
-                </span>
-                <span className="user-name">{session?.user?.name || session?.user?.email}</span>
-                <span className="menu-arrow">▾</span>
-              </button>
-              {menuOpen && (
-                <div className="dropdown-menu">
-                  <Link href={`/${locale}/dashboard`} className="dropdown-item">
-                    {String.fromCodePoint(0x1F4CA)} {t.dashboard}
-                  </Link>
-                  <Link href={`/${locale}/settings`} className="dropdown-item">
-                    {String.fromCodePoint(0x2699, 0xFE0F)} {t.settings}
-                  </Link>
-                  <div className="dropdown-divider" />
-                  <button onClick={() => signOut()} className="dropdown-item dropdown-logout">
-                    {String.fromCodePoint(0x1F69A)} {t.logout}
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : status === 'loading' ? (
-            <div className="nav-skeleton" />
-          ) : (
-            <Link href={`/${locale}/login`} className="btn-nav">{t.login}</Link>
-          )}
-          <ThemeToggle />
-          <Link href={otherPath} className="lang-toggle">
-            {otherLocale === 'zh' ? '中文' : 'EN'}
-          </Link>
-          {/* Mobile hamburger */}
-          <button
-            className="hamburger"
-            type="button"
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setMobileNavOpen(prev => !prev); }}
-            aria-label="Toggle menu"
-            aria-expanded={mobileNavOpen}
-          >
-            <span className={mobileNavOpen ? 'hamburger-line open' : 'hamburger-line'} />
-          </button>
-        </div>
-      </div>
+      </nav>
 
-      {/* Mobile nav drawer */}
+      {/* Mobile nav drawer — outside <nav> so backdrop-filter doesn't trap position:fixed */}
       <div className={`mobile-nav ${mobileNavOpen ? 'mobile-nav-open' : ''}`}>
         <div className="mobile-nav-links">
           {navLinks.map(link => (
@@ -142,6 +144,6 @@ export default function Nav({ locale }: { locale: Locale }) {
           )}
         </div>
       </div>
-    </nav>
+    </>
   );
 }

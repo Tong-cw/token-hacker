@@ -870,7 +870,7 @@ footer p + p { margin-top: 4px; }
 /* Mobile nav drawer */
 .mobile-nav {
   display: none; position: fixed; top: 62px; left: 0; right: 0; bottom: 0;
-  background: var(--bg); z-index: 99; padding: 0 1.5rem;
+  background: var(--bg); z-index: 200; padding: 0 1.5rem;
   flex-direction: column; overflow-y: auto; overflow-x: hidden;
   transform: translateX(110%); transition: transform 0.3s ease;
   visibility: hidden; pointer-events: none;
