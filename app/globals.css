@@ -417,6 +417,26 @@ nav {
 .models-search:focus { outline: none; border-color: var(--accent); }
 .models-search::placeholder { color: var(--text-dim); }
 
+/* Search autocomplete dropdown */
+.search-autocomplete { position: relative; }
+.search-autocomplete .models-search { min-width: 260px; width: 100%; }
+.autocomplete-dropdown {
+  position: absolute; top: 100%; left: 0; right: 0; z-index: 100;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-top: none; border-radius: 0 0 8px 8px;
+  list-style: none; padding: 0.25rem 0; margin: 0;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  max-height: 260px; overflow-y: auto;
+}
+.autocomplete-dropdown li {
+  padding: 0.5rem 1rem; cursor: pointer;
+  color: var(--text-primary); font-size: 0.88rem;
+  transition: background 0.15s;
+}
+.autocomplete-dropdown li:hover {
+  background: var(--accent); color: #fff;
+}
+
 .models-select {
   padding: 10px 14px; background: var(--bg-card); color: var(--text-primary);
   border: 1px solid var(--border); border-radius: 8px;

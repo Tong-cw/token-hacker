@@ -130,6 +130,7 @@ export default function ModelsPage({ params }: { params: { locale: string } }) {
   const [copied, setCopied] = useState('');
   const [selected, setSelected] = useState<ModelItem | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [searchFocused, setSearchFocused] = useState(false);
 
   useEffect(() => {
     fetch('/api/models')
@@ -156,6 +157,11 @@ export default function ModelsPage({ params }: { params: { locale: string } }) {
 
   // Use all filtered models — groups handle overflow via Show more button
   const displayed = filtered;
+
+  // Autocomplete: match providers by name as user types
+  const searchProviders = search.length >= 1
+    ? providers.filter(p => p !== 'All' && p.toLowerCase().includes(search.toLowerCase())).slice(0, 8)
+    : [];
 
   // Reset page when filters change
   const setFilter = (key: string, val: string) => {
@@ -187,13 +193,31 @@ export default function ModelsPage({ params }: { params: { locale: string } }) {
         </div>
 
         <div className="models-filters">
-          <input
-            className="models-search"
-            type="text"
-            placeholder={t.models.search}
-            value={search}
-            onChange={(e) => setFilter('search', e.target.value)}
-          />
+          <div className="search-autocomplete">
+            <input
+              className="models-search"
+              type="text"
+              placeholder={t.models.search}
+              value={search}
+              onChange={(e) => setFilter('search', e.target.value)}
+              onFocus={() => setSearchFocused(true)}
+              onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
+            />
+            {searchFocused && searchProviders.length > 0 && (
+              <ul className="autocomplete-dropdown">
+                {searchProviders.map(p => (
+                  <li key={p} onMouseDown={(e) => {
+                    e.preventDefault();
+                    setSearch('');
+                    setProvider(p);
+                    setExpanded(new Set());
+                  }}>
+                    {p}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
           <select className="models-select" value={provider} onChange={(e) => setFilter('provider', e.target.value)}>
             {providers.map(p => <option key={p} value={p}>{p}</option>)}
           </select>
