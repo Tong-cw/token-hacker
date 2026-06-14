@@ -30,7 +30,7 @@ export default function DashboardPage({ params }: { params: { locale: string } }
   const fetchKey = useCallback(async () => {
     try {
       setKeyLoading(true);
-      const resp = await fetch('/api/user/token', { cache: 'no-store' });
+      const resp = await fetch('/api/token', { cache: 'no-store' });
       const data = await resp.json();
       if (data.success && data.data?.apiKey) {
         setApiKey(data.data.apiKey);
