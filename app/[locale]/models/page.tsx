@@ -14,7 +14,9 @@ interface ModelItem {
 }
 
 function getProvider(id: string, owned_by: string): string {
-  const lower = id.toLowerCase();
+  // Strip channel prefixes like "Pro/" or "org-name/" to get the actual model name
+  const pureId = id.replace(/^(Pro\/|[^/]+\/)/, '');
+  const lower = pureId.toLowerCase();
   if (lower.startsWith('gpt') || lower.startsWith('o1') || lower.startsWith('o3') || lower.startsWith('o4')) return 'OpenAI';
   if (lower.startsWith('claude')) return 'Anthropic';
   if (lower.startsWith('gemini')) return 'Google';
