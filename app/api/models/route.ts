@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getModelRank } from '@/lib/model-rank';
+import correctPricing from '@/lib/correct-pricing.json';
 
 const BACKEND_URL = process.env.NEW_API_URL || 'https://api.aiapisave.xyz';
 const BACKEND_TOKEN = process.env.NEW_API_TOKEN || 'hTaKeyojP8ptefzfc6KbDPuopy5BSE7zIbiAm62rboS8CVQw';
@@ -8,6 +9,12 @@ const BACKEND_TOKEN = process.env.NEW_API_TOKEN || 'hTaKeyojP8ptefzfc6KbDPuopy5B
 const QUOTA_PER_UNIT = 500000;
 const PRICE_PER_UNIT = 5; // dollars
 const DEFAULT_BULK_RATIO = 37.5;
+
+// Use correct pricing from our database, overriding New-API's buggy completion_ratio
+const CORRECT_CR: Record<string, number> = {};
+for (const [model, data] of Object.entries(correctPricing)) {
+  CORRECT_CR[model] = (data as any).completion_ratio;
+}
 
 export async function GET() {
   try {
@@ -34,12 +41,14 @@ export async function GET() {
     const modelsData = await modelsRes.json();
     const pricingData = pricingRes.ok ? await pricingRes.json() : { data: [] };
 
-    // Build pricing map: model_name → { input, output }
+    // Build pricing map with CORRECT completion_ratio
     const priceMap: Record<string, { input: string; output: string }> = {};
     (pricingData.data || []).forEach((p: any) => {
+      // Use New-API's model_ratio (correct) but OVERRIDE completion_ratio with our data
+      const correctCr = CORRECT_CR[p.model_name] ?? p.completion_ratio;
       priceMap[p.model_name] = {
         input: ratioToPrice(p.model_ratio || 1),
-        output: ratioToPrice(p.completion_ratio || 1),
+        output: ratioToPrice(correctCr || 1),
       };
     });
 
