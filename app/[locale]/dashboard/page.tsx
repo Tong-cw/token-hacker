@@ -4,16 +4,13 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { getTranslations, Locale } from '@/lib/i18n';
 
-// Mock data for charts (replace with real API later)
-const HOURLY_REQUESTS = [12, 8, 5, 3, 2, 1, 0, 2, 15, 28, 35, 42, 38, 30, 25, 22, 18, 15, 20, 32, 40, 35, 20, 10];
-const HOURLY_CONSUMPTION = [0.03, 0.02, 0.01, 0.01, 0, 0, 0, 0.01, 0.04, 0.08, 0.12, 0.15, 0.14, 0.10, 0.09, 0.07, 0.06, 0.05, 0.07, 0.11, 0.13, 0.10, 0.05, 0.02];
-
-const CHANNELS = [
-  { id: 1, name: '硅基流动 (SiliconFlow)', provider: '硅基流动', models: 40, status: 'active', latency: '180ms' },
-  { id: 2, name: 'Token173', provider: 'Token173', models: 579, status: 'active', latency: '220ms' },
-  { id: 3, name: '云雾 API (YunWu)', provider: '云雾 API', models: 434, status: 'active', latency: '200ms' },
-  { id: 4, name: '文简 (WenJian)', provider: '文简', models: 22, status: 'active', latency: '280ms' },
-];
+interface DashboardData {
+  user: { username: string; email: string; balance: number; used_quota: number; request_count: number };
+  stats: { today_tokens: number; today_quota: number; month_tokens: number; month_quota: number; total_requests: number };
+  hourly: { requests: number[]; quota: number[] };
+  channels: Array<{ id: number; name: string; provider: string; models: number; status: string; used_quota: number }>;
+  recent_logs: Array<{ model: string; tokens: number; quota: number; time: number; channel_id: number }>;
+}
 
 export default function DashboardPage({ params }: { params: { locale: string } }) {
   const locale = params.locale as Locale;
@@ -23,28 +20,35 @@ export default function DashboardPage({ params }: { params: { locale: string } }
   const [mounted, setMounted] = useState(false);
   const [apiKey, setApiKey] = useState<string | null>(null);
   const [keyLoading, setKeyLoading] = useState(true);
+  const [dashData, setDashData] = useState<DashboardData | null>(null);
+  const [dashLoading, setDashLoading] = useState(true);
 
   useEffect(() => { setMounted(true); }, []);
 
-  // Fetch API key from backend proxy when session is ready
+  // Fetch API key from backend proxy
   const fetchKey = useCallback(async () => {
     try {
       setKeyLoading(true);
       const resp = await fetch('/api/token', { cache: 'no-store' });
       const data = await resp.json();
-      if (data.success && data.data?.apiKey) {
-        setApiKey(data.data.apiKey);
-      }
-    } catch {
-      // silently fail - user can copy manually
-    } finally {
-      setKeyLoading(false);
-    }
+      if (data.success && data.data?.apiKey) setApiKey(data.data.apiKey);
+    } catch { /* silent */ }
+    finally { setKeyLoading(false); }
+  }, []);
+
+  // Fetch dashboard stats from New-API
+  const fetchDashboard = useCallback(async () => {
+    try {
+      const resp = await fetch('/api/dashboard', { cache: 'no-store' });
+      const data = await resp.json();
+      if (data.success) setDashData(data.data);
+    } catch { /* silent */ }
+    finally { setDashLoading(false); }
   }, []);
 
   useEffect(() => {
-    if (session) fetchKey();
-  }, [session, fetchKey]);
+    if (session) { fetchKey(); fetchDashboard(); }
+  }, [session, fetchKey, fetchDashboard]);
 
   function copyKey() {
     if (apiKey) {
@@ -60,10 +64,26 @@ export default function DashboardPage({ params }: { params: { locale: string } }
   const user = session.user as any;
   const now = new Date();
   const currentHour = now.getHours();
-  const maxReq = Math.max(...HOURLY_REQUESTS, 1);
-  const maxCons = Math.max(...HOURLY_CONSUMPTION, 0.01);
+
+  const hourlyRequests: number[] = dashData?.hourly?.requests || new Array(24).fill(0);
+  const hourlyConsumption: number[] = dashData?.hourly?.quota?.map((q: number) => q / 500000) || new Array(24).fill(0);
+  const channels = dashData?.channels || [];
+  const recentLogs = dashData?.recent_logs || [];
+  const stats = dashData?.stats;
+  const balance = dashData?.user?.balance;
+  const maxReq = Math.max(...hourlyRequests, 1);
+  const maxCons = Math.max(...hourlyConsumption, 0.01);
 
   if (!mounted) return <div className="dashboard"><div className="dash-loading"><span className="dash-spinner" /></div></div>;
+
+  const formatTimeAgo = (ts: number) => {
+    const mins = Math.floor((Date.now() / 1000 - ts) / 60);
+    if (mins < 1) return t.justNow || 'Just now';
+    if (mins < 60) return `${mins}${t.minAgoUnit || 'm ago'}`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}${t.hourAgoUnit || 'h ago'}`;
+    return `${Math.floor(hrs / 24)}d ago`;
+  };
 
   return (
     <div className="dashboard">
@@ -83,7 +103,7 @@ export default function DashboardPage({ params }: { params: { locale: string } }
           <div className="dash-stat-icon balance-icon">💳</div>
           <div className="dash-stat-body">
             <div className="dash-stat-label">{t.balance || 'Balance'}</div>
-            <div className="dash-stat-value">${((user.balance || 0) / 100).toFixed(2)}</div>
+            <div className="dash-stat-value">{dashLoading ? '…' : `$${(balance != null ? (balance / 500000) : 0).toFixed(2)}`}</div>
             <div className="dash-stat-sub">{t.availableCredit || 'Available credit'}</div>
           </div>
         </div>
@@ -91,16 +111,16 @@ export default function DashboardPage({ params }: { params: { locale: string } }
           <div className="dash-stat-icon usage-icon">⚡</div>
           <div className="dash-stat-body">
             <div className="dash-stat-label">{t.todaysUsage || "Today's Usage"}</div>
-            <div className="dash-stat-value">{(user.todaysTokens || 125000).toLocaleString()}</div>
-            <div className="dash-stat-sub">{t.tokens || 'tokens'} · ~$0.42</div>
+            <div className="dash-stat-value">{dashLoading ? '…' : (stats?.today_tokens || 0).toLocaleString()}</div>
+            <div className="dash-stat-sub">{t.tokens || 'tokens'} · ~${((stats?.today_quota || 0) / 500000).toFixed(2)}</div>
           </div>
         </div>
         <div className="dash-stat-card">
           <div className="dash-stat-icon month-icon">📊</div>
           <div className="dash-stat-body">
             <div className="dash-stat-label">{t.monthlyUsage || 'Monthly Usage'}</div>
-            <div className="dash-stat-value">{(user.monthlyTokens || 2840000).toLocaleString()}</div>
-            <div className="dash-stat-sub">{t.tokens || 'tokens'} · ~$8.52</div>
+            <div className="dash-stat-value">{dashLoading ? '…' : (stats?.month_tokens || 0).toLocaleString()}</div>
+            <div className="dash-stat-sub">{t.tokens || 'tokens'} · ~${((stats?.month_quota || 0) / 500000).toFixed(2)}</div>
           </div>
         </div>
         <div className="dash-stat-card">
@@ -167,7 +187,7 @@ export default function DashboardPage({ params }: { params: { locale: string } }
         <div className="dash-chart-card">
           <h3 className="dash-chart-title">{t.req24h || '24h Request Volume'} <span className="dash-chart-unit">{t.requests || 'requests'}</span></h3>
           <div className="dash-bar-chart">
-            {HOURLY_REQUESTS.map((val, i) => (
+            {hourlyRequests.map((val: number, i: number) => (
               <div key={i} className="dash-bar-col">
                 <div className="dash-bar-wrapper">
                   <div
@@ -183,8 +203,8 @@ export default function DashboardPage({ params }: { params: { locale: string } }
             ))}
           </div>
           <div className="dash-chart-summary">
-            <span>Total: <strong>{HOURLY_REQUESTS.reduce((a, b) => a + b, 0).toLocaleString()}</strong> {t.requests || 'requests'}</span>
-            <span>Peak: <strong>{maxReq}</strong> @ {HOURLY_REQUESTS.indexOf(maxReq)}:00</span>
+            <span>Total: <strong>{hourlyRequests.reduce((a: number, b: number) => a + b, 0).toLocaleString()}</strong> {t.requests || 'requests'}</span>
+            <span>Peak: <strong>{maxReq}</strong> @ {hourlyRequests.indexOf(maxReq)}:00</span>
           </div>
         </div>
 
@@ -192,7 +212,7 @@ export default function DashboardPage({ params }: { params: { locale: string } }
         <div className="dash-chart-card">
           <h3 className="dash-chart-title">{t.cons24h || '24h Consumption'} <span className="dash-chart-unit">$</span></h3>
           <div className="dash-bar-chart">
-            {HOURLY_CONSUMPTION.map((val, i) => (
+            {hourlyConsumption.map((val: number, i: number) => (
               <div key={i} className="dash-bar-col">
                 <div className="dash-bar-wrapper">
                   <div
@@ -208,8 +228,8 @@ export default function DashboardPage({ params }: { params: { locale: string } }
             ))}
           </div>
           <div className="dash-chart-summary">
-            <span>Total: <strong>${HOURLY_CONSUMPTION.reduce((a, b) => a + b, 0).toFixed(2)}</strong></span>
-            <span>Peak: <strong>${maxCons.toFixed(3)}</strong> @ {HOURLY_CONSUMPTION.indexOf(maxCons)}:00</span>
+            <span>Total: <strong>${hourlyConsumption.reduce((a: number, b: number) => a + b, 0).toFixed(2)}</strong></span>
+            <span>Peak: <strong>${maxCons.toFixed(3)}</strong> @ {hourlyConsumption.indexOf(maxCons)}:00</span>
           </div>
         </div>
       </div>
@@ -218,7 +238,7 @@ export default function DashboardPage({ params }: { params: { locale: string } }
       <div className="dash-section">
         <h3 className="dash-section-title">{t.activeChannels || 'Active Channels'}</h3>
         <div className="dash-channels">
-          {CHANNELS.map(ch => (
+          {channels.map((ch) => (
             <div key={ch.id} className="dash-channel-card">
               <div className="dash-channel-header">
                 <div className="dash-channel-name">
@@ -229,7 +249,7 @@ export default function DashboardPage({ params }: { params: { locale: string } }
               </div>
               <div className="dash-channel-meta">
                 <span>{ch.provider}</span>
-                <span className="dash-channel-latency">⚡ {ch.latency}</span>
+                <span className="dash-channel-latency">📊 {(ch.used_quota || 0).toLocaleString()} quota</span>
               </div>
             </div>
           ))}
@@ -250,36 +270,16 @@ export default function DashboardPage({ params }: { params: { locale: string } }
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td><span className="dash-model-tag">gpt-4o-mini</span></td>
-                <td>12,400</td>
-                <td>$0.003</td>
-                <td className="dash-time">{t.justNow || 'Just now'}</td>
-              </tr>
-              <tr>
-                <td><span className="dash-model-tag">claude-sonnet-4-20250514</span></td>
-                <td>3,200</td>
-                <td>$0.012</td>
-                <td className="dash-time">{t.minAgo || '5m ago'}</td>
-              </tr>
-              <tr>
-                <td><span className="dash-model-tag">deepseek-v3</span></td>
-                <td>28,000</td>
-                <td>$0.005</td>
-                <td className="dash-time">{t.minAgo2 || '12m ago'}</td>
-              </tr>
-              <tr>
-                <td><span className="dash-model-tag">gpt-4o</span></td>
-                <td>8,500</td>
-                <td>$0.021</td>
-                <td className="dash-time">{t.minAgo3 || '28m ago'}</td>
-              </tr>
-              <tr>
-                <td><span className="dash-model-tag">gemini-2.5-flash</span></td>
-                <td>45,000</td>
-                <td>$0.007</td>
-                <td className="dash-time">{t.hourAgo || '1h ago'}</td>
-              </tr>
+              {recentLogs.length === 0 && !dashLoading ? (
+                <tr><td colSpan={4} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>{t.noActivity || 'No recent activity'}</td></tr>
+              ) : recentLogs.map((log, i) => (
+                <tr key={i}>
+                  <td><span className="dash-model-tag">{log.model}</span></td>
+                  <td>{log.tokens.toLocaleString()}</td>
+                  <td>${(log.quota / 500000).toFixed(4)}</td>
+                  <td className="dash-time">{formatTimeAgo(log.time)}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
