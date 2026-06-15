@@ -4,7 +4,7 @@ import { getTranslations, Locale } from '@/lib/i18n';
 
 export default function DocsPage({ params }: { params: { locale: string } }) {
   const locale = params.locale as Locale;
-  const t = getTranslations(locale);
+  const d = getTranslations(locale).docs;
 
   const baseUrl = 'https://api.aiapisave.xyz';
 
@@ -12,20 +12,22 @@ export default function DocsPage({ params }: { params: { locale: string } }) {
     <div className="docs-page">
       {/* Header */}
       <section className="pricing-hero">
-        <h1>{t.docs.title}</h1>
-        <p>{t.docs.subtitle}</p>
+        <h1>{d.title}</h1>
+        <p>{d.subtitle}</p>
       </section>
 
       <div className="docs-layout">
         {/* Sidebar */}
         <aside className="docs-sidebar">
           <ul>
-            <li><a href="#quickstart">{t.docs.quickstart}</a></li>
-            <li><a href="#auth">{t.docs.auth}</a></li>
-            <li><a href="#models">{t.docs.modelsRef}</a></li>
-            <li><a href="#rate-limits">{t.docs.rateLimits}</a></li>
-            <li><a href="#errors">{t.docs.errors}</a></li>
-            <li><a href="#faq">{t.docs.faq}</a></li>
+            <li><a href="#quickstart">{d.sidebar.quickstart}</a></li>
+            <li><a href="#auth">{d.sidebar.auth}</a></li>
+            <li><a href="#models">{d.sidebar.models}</a></li>
+            <li><a href="#streaming">{d.sidebar.streaming}</a></li>
+            <li><a href="#functions">{d.sidebar.functions}</a></li>
+            <li><a href="#rate-limits">{d.sidebar.rateLimits}</a></li>
+            <li><a href="#errors">{d.sidebar.errors}</a></li>
+            <li><a href="#faq">{d.sidebar.faq}</a></li>
           </ul>
         </aside>
 
@@ -33,67 +35,79 @@ export default function DocsPage({ params }: { params: { locale: string } }) {
         <main className="docs-content">
           {/* Quick Start */}
           <section id="quickstart" className="docs-section">
-            <h2>{t.docs.quickstart}</h2>
-            <p>Get your first AI response in under 5 minutes.</p>
+            <h2>{d.quickstart.title}</h2>
+            <p>{d.quickstart.intro}</p>
 
-            <h3>{t.docs.step1}</h3>
-            <p>{t.docs.getKey} <Link href={`/${locale}/dashboard`} style={{ color: 'var(--accent)' }}>{t.docs.dashboard}</Link>.</p>
+            <h3>{d.quickstart.steps.step1.title}</h3>
+            <p>{d.quickstart.steps.step1.desc}</p>
 
-            <h3>{t.docs.step2}</h3>
-            <pre className="docs-code"><code>pip install openai</code></pre>
+            <h3>{d.quickstart.steps.step2.title}</h3>
+            <p>{d.quickstart.steps.step2.desc}</p>
 
-            <h3>{t.docs.step3}</h3>
-            <pre className="docs-code"><code>{`from openai import OpenAI
+            <h3>{d.quickstart.steps.step3.title}</h3>
+            <p>{d.quickstart.steps.step3.desc}</p>
 
-client = OpenAI(
-    base_url="${baseUrl}/v1",
-    api_key="sk-your-api-key",
-)
+            <h4>Python</h4>
+            <pre className="docs-code"><code>{d.quickstart.python}</code></pre>
 
-response = client.chat.completions.create(
-    model="openai/gpt-4o-mini",
-    messages=[
-        {"role": "user", "content": "Hello, world!"}
-    ],
-)
+            <h4>Node.js</h4>
+            <pre className="docs-code"><code>{d.quickstart.nodejs}</code></pre>
 
-print(response.choices[0].message.content)`}</code></pre>
+            <h4>cURL</h4>
+            <pre className="docs-code"><code>{d.quickstart.curl}</code></pre>
+
+            <h4>Streaming (Python)</h4>
+            <pre className="docs-code"><code>{d.quickstart.streamingPython}</code></pre>
+
+            <h4>Streaming (Node.js)</h4>
+            <pre className="docs-code"><code>{d.quickstart.streamingNode}</code></pre>
+
+            <p style={{ marginTop: '1.5rem' }}>
+              <Link href={`/${locale}/dashboard`} style={{ color: 'var(--accent)' }}>
+                {d.quickstart.dashboard} →
+              </Link>
+            </p>
           </section>
 
           {/* Authentication */}
           <section id="auth" className="docs-section">
-            <h2>{t.docs.auth}</h2>
-            <p>All API requests require authentication via Bearer token in the <code>Authorization</code> header.</p>
+            <h2>{d.auth.title}</h2>
+            <p>{d.auth.intro}</p>
             <table className="docs-table">
               <tbody>
                 <tr>
-                  <td className="docs-table-label">{t.docs.baseUrl}</td>
-                  <td><code>{baseUrl}/v1</code></td>
+                  <td className="docs-table-label">{d.auth.baseUrlLabel}</td>
+                  <td><code>{d.auth.baseUrlValue}</code></td>
                 </tr>
                 <tr>
-                  <td className="docs-table-label">{t.docs.authHeader}</td>
-                  <td><code>Authorization: Bearer sk-your-api-key</code></td>
+                  <td className="docs-table-label">{d.auth.authHeaderLabel}</td>
+                  <td><code>{d.auth.authHeaderValue}</code></td>
                 </tr>
                 <tr>
-                  <td className="docs-table-label">{t.docs.contentType}</td>
-                  <td><code>application/json</code></td>
+                  <td className="docs-table-label">{d.auth.contentTypeLabel}</td>
+                  <td><code>{d.auth.contentTypeValue}</code></td>
                 </tr>
               </tbody>
             </table>
-            <p>Your API key can be found in the <Link href={`/${locale}/dashboard`} style={{ color: 'var(--accent)' }}>Dashboard</Link> after signing in.</p>
+            <p>
+              {d.auth.getKey}{' '}
+              <Link href={`/${locale}/dashboard`} style={{ color: 'var(--accent)' }}>
+                {d.auth.dashboard}
+              </Link>.
+            </p>
           </section>
 
-          {/* Models */}
+          {/* Model Reference */}
           <section id="models" className="docs-section">
-            <h2>{t.docs.modelsRef}</h2>
-            <p>Token Hacker supports 200+ models across multiple providers. Browse the full list on the <Link href={`/${locale}/models`} style={{ color: 'var(--accent)' }}>Models page</Link>.</p>
-            <p>Model IDs follow the format: <code>provider/model-name</code></p>
+            <h2>{d.models.title}</h2>
+            <p>{d.models.intro1}</p>
+            <p>{d.models.intro2}</p>
             <table className="docs-table">
               <thead>
                 <tr>
-                  <th>Provider</th>
-                  <th>Format</th>
-                  <th>Example</th>
+                  <th>{d.models.providerCol}</th>
+                  <th>{d.models.formatCol}</th>
+                  <th>{d.models.exampleCol}</th>
                 </tr>
               </thead>
               <tbody>
@@ -104,71 +118,73 @@ print(response.choices[0].message.content)`}</code></pre>
                 <tr><td>Meta</td><td><code>meta/model</code></td><td><code>meta/llama-4-maverick</code></td></tr>
               </tbody>
             </table>
+            <p>{d.models.formatNote}</p>
+          </section>
+
+          {/* Streaming */}
+          <section id="streaming" className="docs-section">
+            <h2>{d.streaming.title}</h2>
+            <p>{d.streaming.intro}</p>
+
+            <h4>Python</h4>
+            <pre className="docs-code"><code>{d.streaming.python}</code></pre>
+
+            <h4>Node.js</h4>
+            <pre className="docs-code"><code>{d.streaming.nodejs}</code></pre>
+          </section>
+
+          {/* Function Calling */}
+          <section id="functions" className="docs-section">
+            <h2>{d.functions.title}</h2>
+            <p>{d.functions.intro}</p>
+
+            <h4>Python</h4>
+            <pre className="docs-code"><code>{d.functions.python}</code></pre>
           </section>
 
           {/* Rate Limits */}
           <section id="rate-limits" className="docs-section">
-            <h2>{t.docs.rateLimits}</h2>
-            <p>Rate limits depend on your account tier and current balance. Standard accounts have:</p>
+            <h2>{d.rateLimits.title}</h2>
+            <p>{d.rateLimits.intro}</p>
             <ul>
-              <li><strong>Requests per minute:</strong> 60 RPM</li>
-              <li><strong>Tokens per minute:</strong> 100K TPM</li>
-              <li><strong>Concurrent requests:</strong> 10</li>
+              <li><strong>{d.rateLimits.rpm}:</strong> 60 RPM</li>
+              <li><strong>{d.rateLimits.tpm}:</strong> 100K TPM</li>
+              <li><strong>{d.rateLimits.concurrent}:</strong> 10</li>
             </ul>
-            <p>When you hit a rate limit, the API returns HTTP <code>429 Too Many Requests</code>. Implement exponential backoff to handle this gracefully.</p>
-            <pre className="docs-code"><code>{`import time
-
-def call_with_retry(client, **kwargs):
-    for attempt in range(5):
-        try:
-            return client.chat.completions.create(**kwargs)
-        except Exception as e:
-            if "429" in str(e):
-                time.sleep(2 ** attempt)
-                continue
-            raise`}</code></pre>
+            <p>{d.rateLimits.rate429}</p>
+            <pre className="docs-code"><code>{d.rateLimits.retryCode}</code></pre>
           </section>
 
-          {/* Errors */}
+          {/* Error Handling */}
           <section id="errors" className="docs-section">
-            <h2>{t.docs.errors}</h2>
+            <h2>{d.errors.title}</h2>
+            <p>{d.errors.intro}</p>
             <table className="docs-table">
               <thead>
-                <tr><th>Code</th><th>Meaning</th></tr>
+                <tr>
+                  <th>{d.errors.codeCol}</th>
+                  <th>{d.errors.meaningCol}</th>
+                </tr>
               </thead>
               <tbody>
-                <tr><td><code>401</code></td><td>Invalid or missing API key</td></tr>
-                <tr><td><code>402</code></td><td>Insufficient balance — top up your account</td></tr>
-                <tr><td><code>429</code></td><td>Rate limit exceeded — slow down requests</td></tr>
-                <tr><td><code>500</code></td><td>Server error — retry with backoff</td></tr>
-                <tr><td><code>503</code></td><td>Model temporarily unavailable — try another model</td></tr>
+                <tr><td><code>401</code></td><td>{d.errors.codes.code401}</td></tr>
+                <tr><td><code>402</code></td><td>{d.errors.codes.code402}</td></tr>
+                <tr><td><code>429</code></td><td>{d.errors.codes.code429}</td></tr>
+                <tr><td><code>500</code></td><td>{d.errors.codes.code500}</td></tr>
+                <tr><td><code>503</code></td><td>{d.errors.codes.code503}</td></tr>
               </tbody>
             </table>
           </section>
 
           {/* FAQ */}
           <section id="faq" className="docs-section">
-            <h2>{t.docs.faq}</h2>
-            <div className="faq-item">
-              <h4>Is the API OpenAI-compatible?</h4>
-              <p>Yes. Token Hacker uses the same API format as OpenAI. Just change <code>base_url</code> to <code>{baseUrl}/v1</code> and your existing code works.</p>
-            </div>
-            <div className="faq-item">
-              <h4>Does my balance expire?</h4>
-              <p>No. Your prepaid balance never expires. Use it whenever you need it.</p>
-            </div>
-            <div className="faq-item">
-              <h4>What payment methods are accepted?</h4>
-              <p>We accept credit/debit cards (Visa, Mastercard) via Stripe, and USDT-TRC20 for crypto payments. More options coming soon.</p>
-            </div>
-            <div className="faq-item">
-              <h4>Do you log my prompts?</h4>
-              <p>No. We do not log or store your prompts or model outputs. Your data is your data.</p>
-            </div>
-            <div className="faq-item">
-              <h4>Can I get a refund?</h4>
-              <p>Prepaid balances are non-refundable. We recommend starting with a small amount to test the service.</p>
-            </div>
+            <h2>{d.faq.title}</h2>
+            {d.faq.items.map((item, i) => (
+              <div key={i} className="faq-item">
+                <h4>{item.q}</h4>
+                <p>{item.a}</p>
+              </div>
+            ))}
           </section>
         </main>
       </div>

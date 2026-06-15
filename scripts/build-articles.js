@@ -1,0 +1,151 @@
+const fs = require('fs');
+
+// Helper: escape for single-quoted TS string (keeps \n as literal \n chars)
+function tsescape(html) {
+  return html
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\r');
+}
+
+const articles = {};
+
+// EN: why-aggregator
+articles.EN_WHY = tsescape(
+  "<h2>The API Key Chaos</h2>" +
+  "<p>If you're building AI-powered applications in 2026, you know the drill. You started with OpenAI — one API key, simple. Then Claude Opus crushed reasoning benchmarks, so you added Anthropic. Then DeepSeek launched with shockingly low pricing, so you opened an account there too. Then Google dropped Gemini 2.5 Pro with a 2-million-token context window... Before you realize it, you're juggling 5 to 10 different API keys across as many dashboards, each with its own billing cycle, rate limits, and SDK quirks.</p>" +
+  "<p>Managing multiple AI providers isn't just annoying — it's expensive mental overhead. You're checking multiple dashboards for usage, reconciling multiple bills at month-end, learning slightly different API patterns, and rewriting integration code every time you want to test a different model. That's friction that shouldn't exist in 2026.</p>" +
+  "<h2>What Is an AI API Aggregator?</h2>" +
+  "<p>An AI API aggregator is a middleware layer that sits between your application and multiple AI model providers. Instead of calling OpenAI's API directly, you call the aggregator's unified API — and the aggregator transparently routes your request to whichever model you specify. You get <strong>one API key</strong>, <strong>one endpoint</strong>, <strong>one billing account</strong>, and immediate access to 200+ models across all major providers.</p>" +
+  "<p>Think of it like a payment processor. When you swipe a Visa card at a store, you don't need a separate relationship with every bank. The processor handles all the routing. AI API aggregators do the same for language models.</p>" +
+  "<blockquote>Token Hacker acts as your universal translation layer between your application and every major AI model on the market.</blockquote>" +
+  "<h2>Key Benefits</h2>" +
+  "<h3>Single API Key</h3>" +
+  "<p>One API key unlocks GPT-5.4, Claude Opus 4, Claude Sonnet 4, Gemini 2.5 Pro, DeepSeek V4, Qwen, Llama, Mistral, and 200+ other models. No more storing a dozen secrets in your environment variables. No more conditional logic to route requests to different providers. Just one key, one endpoint.</p>" +
+  "<h3>Cost Optimization</h3>" +
+  "<p>Aggregators negotiate bulk rates with providers and pass the savings to you. Token Hacker prices are typically <strong>20-50% below</strong> direct API pricing for equivalent models. Instead of paying $15/M tokens for GPT-4o directly, you might pay $8/M through an aggregator. For a production app burning 50M tokens a month, that's real money.</p>" +
+  "<h3>No Vendor Lock-In</h3>" +
+  "<p>When you build directly on OpenAI's API, switching to Claude means changing SDKs, rewriting request formatting, and potentially refactoring response parsing. With an aggregator, switching models is a one-line change. If Anthropic has an outage, you seamlessly fail over to GPT. If DeepSeek raises prices, try Gemini. Your infrastructure stays decoupled from any single provider.</p>" +
+  "<h3>Instant Model Access</h3>" +
+  "<p>New model drops on a Tuesday afternoon? It's available on Token Hacker within hours — sometimes minutes. No new signup flow, no KYC, no billing setup. Just update the model name string in your code and you're using it. In the fast-moving AI landscape of 2026, that agility is a competitive advantage.</p>" +
+  "<h2>Aggregator vs Direct — A Comparison</h2>" +
+  "<table><thead><tr><th>Factor</th><th>API Aggregator (Token Hacker)</th><th>Direct Provider</th></tr></thead><tbody>" +
+  "<tr><td><strong>API Keys to Manage</strong></td><td>1 key for all 200+ models</td><td>1 key per provider (5-10 keys)</td></tr>" +
+  "<tr><td><strong>Billing</strong></td><td>Single prepaid balance, card or USDT</td><td>Multiple monthly invoices, separate payment methods</td></tr>" +
+  "<tr><td><strong>Model Switching</strong></td><td>Change 1 string in code</td><td>New SDK, new auth, new response parsing</td></tr>" +
+  "<tr><td><strong>Pricing</strong></td><td>20-50% below retail via bulk negotiation</td><td>Retail / pay-as-you-go pricing</td></tr>" +
+  "<tr><td><strong>New Model Access</strong></td><td>Hours after launch</td><td>New signup, KYC, billing setup per provider</td></tr>" +
+  "<tr><td><strong>Failover</strong></td><td>Automatic: swap model name if provider is down</td><td>Manual: need pre-existing account on backup provider</td></tr>" +
+  "<tr><td><strong>Support</strong></td><td>Single point of contact</td><td>Per-provider support channels</td></tr>" +
+  "</tbody></table>" +
+  "<h2>Why Token Hacker?</h2>" +
+  "<h3>Prepaid, No Subscription</h3>" +
+  "<p>Most aggregators lock you into monthly subscriptions with minimum commitments. Token Hacker is different: <strong>prepaid only</strong>. Top up any amount via Stripe (credit card) or USDT-TRC20 (crypto). Your balance never expires. No monthly minimum. No auto-renewal you forget to cancel. Just pay for what you use, when you use it. This is especially valuable for indie developers, startups, and anyone who hates subscription fatigue.</p>" +
+  "<h3>OpenAI Compatible — True Drop-In</h3>" +
+  "<p>Token Hacker's API is fully OpenAI-compatible. That means any library, SDK, or tool built for OpenAI works out of the box. Python's <code>openai</code> package, LangChain, LlamaIndex, Vercel AI SDK, continue.dev — they all work with Token Hacker by changing exactly two configuration values: the base URL and the API key. No new library to learn, no code to rewrite.</p>" +
+  "<h3>200+ Models Across All Providers</h3>" +
+  "<p>From frontier models like GPT-5.4 and Claude Opus 4 to budget workhorses like DeepSeek V4 and Gemini 2.5 Flash, Token Hacker covers the full spectrum. Chat, reasoning, vision, embedding, image generation, TTS — all model types, all in one place. Visit <a href=\"https://aiapisave.xyz\">aiapisave.xyz</a> to browse the full catalog.</p>" +
+  "<h2>Real-World Example</h2>" +
+  "<p>Here's a Python example showing how switching models is literally a one-string change:</p>" +
+  "<pre><code>from openai import OpenAI\\n\\nclient = OpenAI(\\n    api_key=\"th-sk-your-key-here\",\\n    base_url=\"https://api.aiapisave.xyz/v1\"\\n)\\n\\n# Use GPT-5.4 for complex reasoning\\nresponse = client.chat.completions.create(\\n    model=\"gpt-5.4\",\\n    messages=[{\"role\": \"user\", \"content\": \"Explain quantum entanglement\"}]\\n)\\n\\n# Switch to Claude Opus 4 — just change one string!\\nresponse = client.chat.completions.create(\\n    model=\"claude-opus-4\",  # That's it. Everything else stays the same.\\n    messages=[{\"role\": \"user\", \"content\": \"Explain quantum entanglement\"}]\\n)\\n\\n# Need a budget option? Try DeepSeek V4\\nresponse = client.chat.completions.create(\\n    model=\"deepseek-v4\",  # Same code, 1/10th the cost\\n    messages=[{\"role\": \"user\", \"content\": \"Explain quantum entanglement\"}]\\n)</code></pre>" +
+  "<p>No new SDK imports. No different request formats. No separate error handling. The aggregator handles all the provider-specific translation behind the scenes.</p>" +
+  "<h2>The Bottom Line</h2>" +
+  "<p>AI API aggregators aren't just a convenience — they're a strategic architectural decision. They decouple your application from any single model provider, give you instant access to every new model, and save you real money through bulk pricing. Token Hacker combines this with prepaid flexibility (no subscription), crypto payment support, and true OpenAI compatibility. If you're building with AI in 2026, using an aggregator isn't a question of <em>if</em> — it's <em>which one</em>. <a href=\"https://aiapisave.xyz\">Start with Token Hacker today</a>.</p>"
+);
+
+// EN: model-choosing-guide
+articles.EN_MODEL = tsescape(
+  "<h2>The Model Maze</h2>" +
+  "<p>In 2026, the AI model landscape is overwhelming. There are dozens of models from at least six major providers, each claiming to be the best at something. GPT-5.4 excels at general intelligence. Claude Opus 4 dominates reasoning benchmarks. Claude Sonnet 4 is the coding champion. DeepSeek V4 offers near-frontier performance at a fraction of the cost. Gemini 2.5 Pro has a 2-million-token context window. And new models drop every week.</p>" +
+  "<p>Choice is great — until you're staring at a model picker with 200+ options, unsure which one will actually work best for your specific use case. The wrong choice means wasted tokens, slower responses, or outputs that miss the mark. This guide gives you a practical framework for choosing the right model every time.</p>" +
+  "<h2>Model Categories at a Glance</h2>" +
+  "<table><thead><tr><th>Category</th><th>Best For</th><th>Top Pick</th><th>Budget Pick</th></tr></thead><tbody>" +
+  "<tr><td><strong>General Chat</strong></td><td>Customer support, Q&A, everyday tasks</td><td>GPT-5.4</td><td>Gemini 2.5 Flash</td></tr>" +
+  "<tr><td><strong>Coding</strong></td><td>Code generation, debugging, refactoring</td><td>Claude Sonnet 4</td><td>DeepSeek V4</td></tr>" +
+  "<tr><td><strong>Deep Reasoning</strong></td><td>Math, logic, research, multi-step problems</td><td>Claude Opus 4</td><td>GPT-4o</td></tr>" +
+  "<tr><td><strong>Creative Writing</strong></td><td>Content creation, storytelling, marketing</td><td>Claude Opus 4</td><td>GPT-4o</td></tr>" +
+  "<tr><td><strong>Vision / Multimodal</strong></td><td>Image analysis, OCR, chart reading</td><td>GPT-5.4</td><td>Gemini 2.5 Pro</td></tr>" +
+  "<tr><td><strong>Budget / Fast</strong></td><td>High-volume, latency-sensitive, simple tasks</td><td>DeepSeek V4</td><td>Gemini 2.5 Flash</td></tr>" +
+  "</tbody></table>" +
+  "<h2>Use Case Deep Dives</h2>" +
+  "<h3>Coding & Development</h3>" +
+  "<p>For code generation and debugging, <strong>Claude Sonnet 4</strong> is the current leader. It produces clean, idiomatic code with fewer hallucinations than competitors. It understands large codebases well and maintains context across long conversations. For budget-conscious projects, <strong>DeepSeek V4</strong> delivers surprisingly good code quality at roughly 1/10th the cost. <strong>GPT-4o</strong> remains a solid all-rounder if you're already in the OpenAI ecosystem.</p>" +
+  "<p>Pro move: Use DeepSeek V4 for boilerplate generation and Claude Sonnet 4 for complex architectural decisions. Mix and match based on task complexity.</p>" +
+  "<h3>Deep Reasoning & Analysis</h3>" +
+  "<p>When you need a model to think through complex logic chains, mathematical proofs, or multi-step analysis, <strong>Claude Opus 4</strong> is the gold standard. Its extended thinking mode produces detailed chain-of-thought reasoning that's genuinely insightful. <strong>GPT-5.4</strong> is a close contender, especially for problems requiring broad world knowledge alongside reasoning.</p>" +
+  "<p>Token Hacker supports both models through the same endpoint, so you can A/B test which one performs better for your specific reasoning tasks without changing any infrastructure.</p>" +
+  "<h3>Creative Writing & Content</h3>" +
+  "<p><strong>Claude Opus 4</strong> produces the most natural, human-like prose for creative writing, storytelling, and nuanced content. Its outputs feel less formulaic and more voice-driven than other models. <strong>GPT-4o</strong> is excellent for structured content like documentation, technical writing, and marketing copy that needs to follow specific guidelines.</p>" +
+  "<h3>Budget-Conscious Projects</h3>" +
+  "<p><strong>Gemini 2.5 Pro</strong> and <strong>DeepSeek V4</strong> offer incredible value. For tasks like summarization, classification, data extraction, and simple Q&A, these models perform nearly as well as frontier models at a small fraction of the cost. A typical application can save 60-80% on API costs by routing simpler tasks to these models while reserving Opus or GPT-5.4 for complex reasoning.</p>" +
+  "<h2>Decision Framework</h2>" +
+  "<p>Ask yourself these four questions before picking a model:</p>" +
+  "<ol><li><strong>What's the task complexity?</strong> Simple tasks (classification, extraction) → budget models. Complex tasks (reasoning, creative work) → frontier models.</li>" +
+  "<li><strong>What's your latency budget?</strong> Real-time apps need fast models. DeepSeek V4 and Gemini Flash are your friends. Batch processing can tolerate slower, more thorough models like Claude Opus 4.</li>" +
+  "<li><strong>What's your cost tolerance?</strong> If you're processing millions of tokens daily, even small per-token differences compound. Use Token Hacker's pricing page to compare.</li>" +
+  "<li><strong>Do you need multimodal?</strong> Vision tasks narrow the field significantly. GPT-5.4 and Gemini 2.5 Pro are the top multimodal options.</li></ol>" +
+  "<h2>The Token Hacker Advantage</h2>" +
+  "<p>The entire premise of Token Hacker is that you <strong>shouldn't have to commit to one model</strong>. With a single API key, you can try all of them. Start with the budget pick. If the output quality isn't good enough, swap in the top pick — it's a one-line change. If a new model drops that outperforms everything, you can test it within minutes. No new accounts, no new billing, no new SDK integration.</p>" +
+  "<blockquote>With Token Hacker, model selection isn't a one-time decision. It's a dynamic optimization you can tune per-request.</blockquote>" +
+  "<h2>Pro Tips</h2>" +
+  "<ul>" +
+  "<li><strong>Start cheap, upgrade when needed.</strong> Route every request to DeepSeek V4 or Gemini Flash first. Only escalate to Opus/GPT-5.4 when the cheap model's output doesn't meet quality thresholds.</li>" +
+  "<li><strong>Cache aggressively.</strong> For identical prompts (system messages, few-shot examples), cache the response. Token Hacker supports standard OpenAI-compatible caching headers.</li>" +
+  "<li><strong>Use streaming for UX.</strong> All models on Token Hacker support SSE streaming. Enable it for any user-facing application — the perceived latency improvement is dramatic.</li>" +
+  "<li><strong>Monitor model performance.</strong> Log which model handled each request and track quality metrics. Over time, you'll build a data-driven understanding of which model works best for which task type.</li>" +
+  "<li><strong>Set fallback chains.</strong> Configure your app to try Model A first, and if it fails (rate limit, timeout, error), automatically fall back to Model B. Token Hacker's unified endpoint makes this trivial.</li>" +
+  "</ul>"
+);
+
+// EN: migrate-5min
+articles.EN_MIGRATE = tsescape(
+  "<h2>Why Migrate?</h2>" +
+  "<p>If you're using the OpenAI API directly, you're overpaying and limiting yourself to one provider's models. Token Hacker gives you the <strong>exact same API interface</strong> — OpenAI-compatible — but with access to 200+ models from every major provider, at prices typically 20-50% lower. Same code, more choice, less money. Here's how to make the switch in under five minutes.</p>" +
+  "<h2>Step 1 — Get Your API Key</h2>" +
+  "<p>Head to <a href=\"https://aiapisave.xyz\">aiapisave.xyz</a> and sign up. GitHub OAuth means no email verification, no waiting. Once logged in, go to your dashboard and copy your API key. It looks like this: <code>th-sk-xxxxxxxxxxxxxxxxxxxxxxxx</code>.</p>" +
+  "<p>Top up your balance via Stripe (credit card) or USDT-TRC20. Any amount works — there's no minimum. Your balance never expires.</p>" +
+  "<h2>Step 2 — Change Two Lines</h2>" +
+  "<p>The migration is literally two changes in your code:</p>" +
+  "<ol><li><strong>Base URL:</strong> Change from <code>https://api.openai.com/v1</code> to <code>https://api.aiapisave.xyz/v1</code></li>" +
+  "<li><strong>API Key:</strong> Replace your OpenAI key with your Token Hacker key (starts with <code>th-sk-</code>)</li></ol>" +
+  "<p>That's it. Every OpenAI-compatible library, SDK, and tool works unchanged. The request and response formats are identical.</p>" +
+  "<h2>Step 3 — Code Examples</h2>" +
+  "<h3>Python</h3>" +
+  "<p>Before (OpenAI):</p>" +
+  "<pre><code>from openai import OpenAI\\n\\nclient = OpenAI(api_key=\"sk-...\")\\n\\nresponse = client.chat.completions.create(\\n    model=\"gpt-4o\",\\n    messages=[{\"role\": \"user\", \"content\": \"Hello!\"}]\\n)\\nprint(response.choices[0].message.content)</code></pre>" +
+  "<p>After (Token Hacker):</p>" +
+  "<pre><code>from openai import OpenAI\\n\\nclient = OpenAI(\\n    api_key=\"th-sk-your-key-here\",\\n    base_url=\"https://api.aiapisave.xyz/v1\"\\n)\\n\\nresponse = client.chat.completions.create(\\n    model=\"gpt-4o\",  # Same model name — or try \"claude-sonnet-4\", \"deepseek-v4\"\\n    messages=[{\"role\": \"user\", \"content\": \"Hello!\"}]\\n)\\nprint(response.choices[0].message.content)</code></pre>" +
+  "<h3>Node.js</h3>" +
+  "<p>Before (OpenAI):</p>" +
+  "<pre><code>import OpenAI from 'openai';\\n\\nconst openai = new OpenAI({ apiKey: 'sk-...' });\\n\\nconst response = await openai.chat.completions.create({\\n  model: 'gpt-4o',\\n  messages: [{ role: 'user', content: 'Hello!' }],\\n});\\nconsole.log(response.choices[0].message.content);</code></pre>" +
+  "<p>After (Token Hacker):</p>" +
+  "<pre><code>import OpenAI from 'openai';\\n\\nconst openai = new OpenAI({\\n  apiKey: 'th-sk-your-key-here',\\n  baseURL: 'https://api.aiapisave.xyz/v1',\\n});\\n\\nconst response = await openai.chat.completions.create({\\n  model: 'claude-sonnet-4',  // Try any model!\\n  messages: [{ role: 'user', content: 'Hello!' }],\\n});\\nconsole.log(response.choices[0].message.content);</code></pre>" +
+  "<h3>cURL</h3>" +
+  "<p>Before (OpenAI):</p>" +
+  "<pre><code>curl https://api.openai.com/v1/chat/completions \\\\\\n  -H \"Content-Type: application/json\" \\\\\\n  -H \"Authorization: Bearer sk-...\" \\\\\\n  -d '{\"model\":\"gpt-4o\",\"messages\":[{\"role\":\"user\",\"content\":\"Hello!\"}]}'</code></pre>" +
+  "<p>After (Token Hacker):</p>" +
+  "<pre><code>curl https://api.aiapisave.xyz/v1/chat/completions \\\\\\n  -H \"Content-Type: application/json\" \\\\\\n  -H \"Authorization: Bearer th-sk-your-key-here\" \\\\\\n  -d '{\"model\":\"deepseek-v4\",\"messages\":[{\"role\":\"user\",\"content\":\"Hello!\"}]}'</code></pre>" +
+  "<h2>Advanced: Multi-Model Routing</h2>" +
+  "<p>Once you're on Token Hacker, you can build intelligent model routing. Here's a Python example that picks the best model based on task type:</p>" +
+  "<pre><code>from openai import OpenAI\\n\\nclient = OpenAI(\\n    api_key=\"th-sk-your-key-here\",\\n    base_url=\"https://api.aiapisave.xyz/v1\"\\n)\\n\\ndef smart_chat(prompt, task_type=\"general\"):\\n    model_map = {\\n        \"coding\": \"claude-sonnet-4\",\\n        \"reasoning\": \"claude-opus-4\",\\n        \"creative\": \"claude-opus-4\",\\n        \"fast\": \"deepseek-v4\",\\n        \"vision\": \"gpt-5.4\",\\n        \"general\": \"gpt-4o\",\\n    }\\n    model = model_map.get(task_type, \"gpt-4o\")\\n    return client.chat.completions.create(\\n        model=model,\\n        messages=[{\"role\": \"user\", \"content\": prompt}]\\n    )\\n\\n# Same client, different models — all through one API key\\ncode_review = smart_chat(\"Review this function for bugs\", \"coding\")\\nanalysis = smart_chat(\"Analyze this market trend\", \"reasoning\")\\nquick_answer = smart_chat(\"What's 2+2?\", \"fast\")</code></pre>" +
+  "<h2>What About My Existing Code?</h2>" +
+  "<p><strong>Short answer: it works.</strong> Token Hacker implements the full OpenAI chat completions API, including:</p>" +
+  "<ul><li>Streaming responses (SSE)</li><li>Function calling / tool use</li><li>JSON mode and structured outputs</li><li>System messages and multi-turn conversations</li><li>Temperature, top_p, max_tokens, and all standard parameters</li><li>Vision (image inputs via base64 or URL)</li></ul>" +
+  "<p>Libraries like LangChain, LlamaIndex, Vercel AI SDK, and continue.dev all work without modification. Just point them at Token Hacker's base URL.</p>" +
+  "<h2>Common Questions</h2>" +
+  "<p><strong>Q: Is the response format identical?</strong><br>Yes. The JSON response structure matches OpenAI's exactly. <code>choices[0].message.content</code>, <code>usage.prompt_tokens</code>, <code>usage.completion_tokens</code> — all the same fields in the same places.</p>" +
+  "<p><strong>Q: What about streaming?</strong><br>Fully supported. SSE streaming works identically. All streaming clients (including browser-based ones) work without changes.</p>" +
+  "<p><strong>Q: Will my rate limits change?</strong><br>Token Hacker provides generous default rate limits. If you need higher limits, reach out through the dashboard — we're happy to accommodate production workloads.</p>" +
+  "<p><strong>Q: Can I still use OpenAI models?</strong><br>Yes! GPT-4o, GPT-5.4, and all OpenAI models are available through Token Hacker. You get the same models, often at better prices, plus access to every other provider's models through the same key.</p>" +
+  "<p><strong>Q: What if something goes wrong?</strong><br>Token Hacker provides detailed error responses in the same format as OpenAI, plus a dashboard with real-time usage monitoring. Support is available via the website.</p>"
+);
+
+// Write all contents to JSON for the edit script
+fs.writeFileSync('C:\\Users\\Administrator\\token-hacker\\scripts\\article-contents.json', JSON.stringify(articles, null, 2), 'utf8');
+console.log('✓ Article contents JSON written');
+console.log('Articles defined: ' + Object.keys(articles).join(', '));
+console.log('Sizes:');
+for (const [k, v] of Object.entries(articles)) {
+  console.log(`  ${k}: ${v.length} chars`);
+}
