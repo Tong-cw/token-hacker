@@ -1,0 +1,20 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:1080px;height:1080px;overflow:hidden;font-family:'Segoe UI',system-ui,sans-serif;background:#0A0A0A;color:#fff}
+.g{position:absolute;border-radius:50%}
+.g1{top:-150px;left:-150px;width:500px;height:500px;background:radial-gradient(circle,rgba(0,255,65,0.1),transparent)}
+.g2{bottom:-120px;right:-120px;width:450px;height:450px;background:radial-gradient(circle,rgba(0,255,65,0.06),transparent)}
+.a{color:#00FF41}.d{color:#A0A0A0}.r{color:#FF4444}
+</style></head><body><div class="g g1"></div><div class="g g2"></div>
+<div style="display:flex;flex-direction:column;justify-content:center;height:100%;padding:70px;position:relative;z-index:1">
+<h2 style="font-size:38px;font-weight:800;margin-bottom:10px"><span class="a">Same code.</span> Any model.</h2>
+<p style="font-size:18px;color:#A0A0A0;margin-bottom:30px">Switch models by changing one string</p>
+<div style="background:#141414;border:1px solid #2A2A2A;border-radius:12px;padding:30px;font-family:'Cascadia Code',Consolas,monospace;font-size:18px;line-height:2.2">
+<div><span style="color:#666">client = OpenAI(</span></div>
+<div><span style="color:#666">  base_url=</span><span style="color:#66FF99">"https://api.aiapisave.xyz/v1"</span><span style="color:#666">,</span></div>
+<div><span style="color:#666">  api_key=</span><span style="color:#66FF99">"sk-..."</span></div>
+<div><span style="color:#666">)</span></div>
+<div style="margin-top:16px"><span style="color:#666">model=</span><span style="color:#FFCC00;background:rgba(255,204,0,0.1);padding:2px 6px;border-radius:4px">"anthropic/claude-sonnet-4"</span></div>
+</div>
+<p style="font-size:16px;color:#A0A0A0;margin-top:20px">← Change this to switch models</p>
+</div></body></html>

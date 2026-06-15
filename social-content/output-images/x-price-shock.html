@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:1200px;height:675px;overflow:hidden;font-family:'Segoe UI',system-ui,sans-serif;background:#0A0A0A;color:#fff;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:60px}
+.glow{position:absolute;top:-100px;left:-100px;width:400px;height:400px;background:radial-gradient(circle,rgba(0,255,65,0.15),transparent);border-radius:50%}
+.glow2{position:absolute;bottom:-80px;right:-80px;width:300px;height:300px;background:radial-gradient(circle,rgba(0,255,65,0.1),transparent);border-radius:50%}
+h1{font-size:52px;font-weight:800;text-align:center;z-index:1;line-height:1.2}
+h1 span{color:#00FF41}
+.sub{font-size:22px;color:#A0A0A0;margin-top:20px;z-index:1;text-align:center}
+.grid{display:flex;gap:40px;margin-top:50px;z-index:1}
+.col{text-align:center}
+.col .label{font-size:13px;text-transform:uppercase;letter-spacing:3px;color:#666;margin-bottom:12px}
+.col .big{font-size:48px;font-weight:800}
+.col .big.red{color:#FF4444}
+.col .big.green{color:#00FF41}
+.col .small{font-size:16px;color:#A0A0A0;margin-top:4px}
+.arrow{font-size:36px;color:#00FF41;display:flex;align-items:center}
+.savings{margin-top:30px;background:rgba(0,255,65,0.1);border:1px solid rgba(0,255,65,0.3);border-radius:12px;padding:12px 32px;z-index:1}
+.savings span{color:#00FF41;font-size:28px;font-weight:800}
+</style></head>
+<body>
+<div class="glow"></div><div class="glow2"></div>
+<h1>You're Overpaying for<br>AI APIs by <span>60%</span></h1>
+<p class="sub">Same models. Same quality. Half the price.</p>
+<div class="grid">
+  <div class="col"><div class="label">Official Price</div><div class="big red">$15.00</div><div class="small">per 1M tokens</div></div>
+  <div class="arrow">→</div>
+  <div class="col"><div class="label">Token Hacker</div><div class="big green">$6.00</div><div class="small">per 1M tokens</div></div>
+</div>
+<div class="savings">You save <span>$9.00/M</span> — that's <span>60%</span> less</div>
+</body>
+</html>

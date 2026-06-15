@@ -1,0 +1,18 @@
+<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{width:1200px;height:675px;overflow:hidden;font-family:'Segoe UI',system-ui,sans-serif;background:#0A0A0A;color:#fff}
+.g{position:absolute;border-radius:50%}
+.g1{top:-120px;left:-120px;width:400px;height:400px;background:radial-gradient(circle,rgba(0,255,65,0.12),transparent)}
+.g2{bottom:-100px;right:-100px;width:350px;height:350px;background:radial-gradient(circle,rgba(0,255,65,0.08),transparent)}
+.accent{color:#00FF41}.dim{color:#A0A0A0}.red{color:#FF4444}
+</style></head><body><div class="g g1"></div><div class="g g2"></div>
+<div style="display:flex;flex-direction:column;justify-content:center;height:100%;padding:50px 80px;position:relative;z-index:1">
+<h2 style="font-size:32px;font-weight:800;margin-bottom:30px"><span class="accent">Change 2 lines.</span> Save 60%.</h2>
+<div style="background:#141414;border:1px solid #2A2A2A;border-radius:10px;padding:30px;font-family:'Cascadia Code','Consolas',monospace;font-size:16px;line-height:2">
+<div style="color:#FF4444">- base_url = <span style="color:#FF8888">"https://api.openai.com/v1"</span></div>
+<div style="color:#00FF41">+ base_url = <span style="color:#66FF99">"https://api.aiapisave.xyz/v1"</span></div>
+<div style="margin-top:16px;color:#FF4444">- model = <span style="color:#FF8888">"gpt-4o"</span></div>
+<div style="color:#00FF41">+ model = <span style="color:#66FF99">"openai/gpt-4o"</span></div>
+</div>
+<p style="font-size:17px;color:#A0A0A0;margin-top:24px">That's it. Your existing code works. OpenAI SDK compatible.</p>
+</div></body></html>
